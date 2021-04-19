@@ -191,3 +191,11 @@ iframe.video-conference {
   width: 100%;
   display: block;
 }
+
+.terms-text {
+  height: 70vh;
+  width: 100%;
+  overflow-y: scroll;
+  border: 1px solid #ced4da;
+  padding: 10px;
+}
