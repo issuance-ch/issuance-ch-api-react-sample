@@ -126,10 +126,24 @@ const Pol = {
 };
 
 const Contribution = {
-  patchContribution: (subscriptionId, data) =>
-    requests.patch(`/subscriptions/${subscriptionId}/contribution`, data),
-  getContributionEstimation: (subscriptionId, data) =>
-    requests.post(`/subscriptions/${subscriptionId}/share-price-estimation`, data),
+  patchContribution: (subscriptionId, data, coupon, simulation = true) => {
+    if (coupon) {
+      data.coupon = coupon;
+    }
+    data.simulation = simulation;
+    return requests.patch(`/subscriptions/${subscriptionId}/contribution`, data)
+  },
+  getContributionEstimation: (subscriptionId, data, coupon, simulation = true) => {
+    if (coupon) {
+      data.coupon = coupon;
+    }
+    data.simulation = simulation;
+    return requests.post(`/subscriptions/${subscriptionId}/share-price-estimation`, data)
+  },
+
+  checkCoupon: (icoId, couponCode) => {
+    return requests.get(`/icos/${icoId}/coupon?code=${couponCode}`)
+  }
 };
 
 const Subscriptions = {

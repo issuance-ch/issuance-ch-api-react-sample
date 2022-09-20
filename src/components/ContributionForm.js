@@ -118,6 +118,8 @@ function ContributionForm(props) {
       ContributionStore.setData("currencies", currencies);
     }
   }
+  
+  ContributionStore.getContributionEstimation(subscriptionId);
 
   return (
     <>
@@ -192,6 +194,25 @@ function ContributionForm(props) {
           <strong>CHF equivalent :</strong> {ContributionStore.getTotalChf()}
         </Col>
       </Row>
+
+      {ico.has_coupons && <Row>
+        <Col xs="12" className="mb-4 mb-md-0">
+            <FormGroup>
+              <Label className="required" for="coupon">Coupon</Label>
+              <Input type="text" id="coupon"
+                placeholder="Enter a coupon code"
+                invalid={ContributionStore.hasError(['coupon'])}
+                onChange={ev => {
+                  ContributionStore.checkCoupon(ico.id, ev.target.value).then(couponData => {
+                    ContributionStore.setCoupon(couponData.code)
+                    ContributionStore.getContributionEstimation(subscriptionId);
+                  }).catch(err => {})
+                }}
+              />
+              <FieldErrors errors={errors} field={"coupon"} />
+            </FormGroup>
+          </Col>
+        </Row>}
 
       {ContributionStore.getFormErrors().map((err, index) => {
         return <div className="error" key={index}>{err}</div>

@@ -10,6 +10,7 @@ class ContributionStore {
   errors = {};
 
   currencyId = 1;
+  coupon = "";
 
   get loading() {
     return this.loadingCount > 0;
@@ -28,6 +29,10 @@ class ContributionStore {
         }]
       }
     }
+  }
+
+  setCoupon(coupon) {
+    this.coupon = coupon;
   }
 
   getTotalChf() {
@@ -103,9 +108,15 @@ class ContributionStore {
     return this.errors.form ? Object.values(this.errors.form) : [];
   }
 
+  /**
+   * Simulate a contribution to check if values are correct and get the contribution amount
+   * 
+   * @param {string} subscriptionId Subscription unique id
+   * @returns the details of the contribution estimation
+   */
   getContributionEstimation(subscriptionId) {
     let simulationData = { simulation: true, ...this.data };
-    return Contribution.patchContribution(subscriptionId, simulationData)
+    return Contribution.patchContribution(subscriptionId, simulationData, this.coupon, true)
       .then(action(res => {
         this.totalChf = res.total_chf;
         return res;
@@ -117,11 +128,31 @@ class ContributionStore {
       ;
   }
 
+  /**
+   * Verify if the coupon exists in the project. Return the coupons details if exists or store the error if not
+   * @param {string} icoId Ico unique id
+   * @param {string} couponCode Coupon code
+   * @returns The coupon details if valid
+   */
+  checkCoupon(icoId, couponCode) {
+    return Contribution.checkCoupon(icoId, couponCode).then(action(res => {
+      if (this.errors?.fields?.coupon) {
+        delete this.errors.fields.coupon;
+      }
+      return res;
+    })).catch(action(err => {
+      if (err.response && err.response.body && err.response.status && err.response.status === 404) {
+        this.errors = {fields: {}, form: {}};
+        this.errors.fields.coupon = "Coupon does not exist";
+      }
+    }))
+  }
+
   async postContribution(subscriptionId) {
     this.loadingCount++;
 
     this.errors = {};
-    return Contribution.patchContribution(subscriptionId, this.data)
+    return Contribution.patchContribution(subscriptionId, this.data, this.coupon, false)
       .then(action(res => res))
       .catch(action(err => {
         if (err.response && err.response.body && err.response.status && err.response.status === 400) {
