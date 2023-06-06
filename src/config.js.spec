@@ -1,11 +1,11 @@
 // Address of the API
-export const API_ROOT = 'https://api-staging.altcoinomy.com/api/v1';
+export const API_ROOT = 'https://api-staging.alt.co/api/v1';
 
 // Application name used in page title and welcome message
 export const APP_NAME = 'Altcoinomy';
 
 // Server prefix where videoconference are hosted
-export const CONFERENCE_HOST_NAME = 'https://onboarding-staging.altcoinomy.com';
+export const CONFERENCE_HOST_NAME = 'https://onboarding-staging.alt.co';
 
 // List of projects to be display on the platform (null to display every available projects). You can use either the slug or project ids
 // Exemple : 
