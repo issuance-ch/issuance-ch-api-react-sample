@@ -1,23 +1,21 @@
-import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { inject, observer } from "mobx-react";
 
-function PrivateRoute(props) {
-  const { CustomerStore, ...restProps } = props;
-
+function PrivateRoute({ CustomerStore, children }) {
   if (!CustomerStore.currentCustomer) {
-    return <Redirect to="/" />;
-  };
+    return <Navigate to="/" />;
+  }
 
   if (!CustomerStore.currentCustomer.roles) {
-    return <Redirect to="/validate" />;
-  };
+    return <Navigate to="/validate" />;
+  }
 
   if (!CustomerStore.currentCustomer.roles.includes("ROLE_USER_CONFIRMED")) {
-    return <Redirect to="/" />;
-  };
+    return <Navigate to="/" />;
+  }
 
-  return <Route {...restProps} />
+  return children;
 }
 
-export default inject('CustomerStore')(observer(PrivateRoute));
+export default inject("CustomerStore")(observer(PrivateRoute));

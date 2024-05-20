@@ -1,7 +1,18 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { VideoConference } from '../helpers/agent';
+import { makeObservable, observable, action, computed } from "mobx";
+import { VideoConference } from "../helpers/agent";
 
 class VideoConferenceStore {
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      slotRegistry: observable,
+      preferredLanguage: observable,
+      loading: computed,
+      slots: computed,
+      loadSlots: action,
+      bookSlot: action,
+    });
+  }
 
   loadingCount = 0;
   slotRegistry = [];
@@ -21,18 +32,17 @@ class VideoConferenceStore {
   }
 
   get slots() {
-    const slots = {
-    }
+    const slots = {};
 
-    this.slotRegistry.forEach(slot => {
-      const date = slot.date.split('T')[0];
+    this.slotRegistry.forEach((slot) => {
+      const date = slot.date.split("T")[0];
 
       if (!(date in slots)) {
         slots[date] = [];
       }
 
       slots[date].push(slot);
-    })
+    });
 
     return slots;
   }
@@ -43,33 +53,33 @@ class VideoConferenceStore {
     this.slotRegistry = [];
 
     return VideoConference.list()
-      .then(action(slots => {
-        this.slotRegistry = slots;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-      ;
+      .then(
+        action((slots) => {
+          this.slotRegistry = slots;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   bookSlot(slotId, subscriptionId) {
     this.loadingCount++;
 
     return VideoConference.book(slotId, subscriptionId, this.preferredLanguage)
-      .then(action(res => {
-        console.info('bookSlot', res);
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-      ;
+      .then(
+        action((res) => {
+          console.info("bookSlot", res);
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(VideoConferenceStore, {
-  loadingCount: observable,
-  slotRegistry: observable,
-  preferredLanguage: observable,
-  loading: computed,
-  slots: computed,
-  loadSlots: action,
-  bookSlot: action,
-});
 
 export default new VideoConferenceStore();

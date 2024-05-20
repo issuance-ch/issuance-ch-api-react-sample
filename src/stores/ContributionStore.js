@@ -1,16 +1,31 @@
-import { decorate, observable, action, computed, toJS } from 'mobx';
-import { Contribution } from '../helpers/agent';
+import { makeObservable, observable, action, computed, toJS } from "mobx";
+import { Contribution } from "../helpers/agent";
 
 class ContributionStore {
-
   loadingCount = 0;
   totalChf = null;
 
   data = null;
+  signatureData = null;
   errors = {};
 
   currencyId = 1;
   coupon = "";
+
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      totalChf: observable,
+      errors: observable,
+      data: observable,
+      signatureData: observable,
+      loading: computed,
+      reset: action,
+      setData: action,
+      setInitialData: action,
+      postContribution: action,
+    });
+  }
 
   get loading() {
     return this.loadingCount > 0;
@@ -21,13 +36,15 @@ class ContributionStore {
     if (!data) {
       this.data = {
         tier: "tier1",
-        currencies: [{
-          id: this.currencyId,
-          currency_code: "",
-          amount: "",
-          address: "",
-        }]
-      }
+        currencies: [
+          {
+            id: this.currencyId,
+            currency_code: "",
+            amount: "",
+            address: "",
+          },
+        ],
+      };
     }
   }
 
@@ -55,12 +72,12 @@ class ContributionStore {
 
   removeInvestment(currency) {
     if (this.data.currencies.length > 1) {
-      this.data.currencies.remove(currency)
+      this.data.currencies.remove(currency);
     }
   }
 
   reset() {
-    this.data.tier = '';
+    this.data.tier = "";
     this.data.currencies = [];
 
     this.errors = {};
@@ -92,7 +109,7 @@ class ContributionStore {
     }
 
     return path.reduce((prev, curr) => {
-      if (null === prev || typeof prev !== 'object') {
+      if (null === prev || typeof prev !== "object") {
         return null;
       }
 
@@ -110,22 +127,26 @@ class ContributionStore {
 
   /**
    * Simulate a contribution to check if values are correct and get the contribution amount
-   * 
+   *
    * @param {string} subscriptionId Subscription unique id
    * @returns the details of the contribution estimation
    */
   getContributionEstimation(subscriptionId) {
     let simulationData = { simulation: true, ...this.data };
-    return Contribution.patchContribution(subscriptionId, simulationData, this.coupon, true)
-      .then(action(res => {
-        this.totalChf = res.total_chf;
-        return res;
-      }))
-      .catch(action(err => {
-
-      }))
-      .finally(action(() => { }))
-      ;
+    return Contribution.patchContribution(
+      subscriptionId,
+      simulationData,
+      this.coupon,
+      true
+    )
+      .then(
+        action((res) => {
+          this.totalChf = res.total_chf;
+          return res;
+        })
+      )
+      .catch(action((err) => {}))
+      .finally(action(() => {}));
   }
 
   /**
@@ -135,53 +156,66 @@ class ContributionStore {
    * @returns The coupon details if valid
    */
   checkCoupon(icoId, couponCode) {
-    return Contribution.checkCoupon(icoId, couponCode).then(action(res => {
-      if (this.errors?.fields?.coupon) {
-        delete this.errors.fields.coupon;
-      }
-      return res;
-    })).catch(action(err => {
-      if (err.response && err.response.body && err.response.status && err.response.status === 404) {
-        this.errors = {fields: {}, form: {}};
-        this.errors.fields.coupon = "Coupon does not exist";
-      }
-    }))
+    return Contribution.checkCoupon(icoId, couponCode)
+      .then(
+        action((res) => {
+          if (this.errors?.fields?.coupon) {
+            delete this.errors.fields.coupon;
+          }
+          return res;
+        })
+      )
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 404
+          ) {
+            this.errors = { fields: {}, form: {} };
+            this.errors.fields.coupon = "Coupon does not exist";
+          }
+        })
+      );
   }
 
   async postContribution(subscriptionId) {
     this.loadingCount++;
 
     this.errors = {};
-    return Contribution.patchContribution(subscriptionId, this.data, this.coupon, false)
-      .then(action(res => res))
-      .catch(action(err => {
-        if (err.response && err.response.body && err.response.status && err.response.status === 400) {
-          if (err.response.body.form) {
-            this.errors.form = err.response.body.form;
+    return Contribution.patchContribution(
+      subscriptionId,
+      this.data,
+      this.coupon,
+      false
+    )
+      .then(action((res) => res))
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 400
+          ) {
+            if (err.response.body.form) {
+              this.errors.form = err.response.body.form;
+            }
+            if (err.response.body.fields) {
+              this.errors.fields = err.response.body.fields;
+            }
           }
-          if (err.response.body.fields) {
-            this.errors.fields = err.response.body.fields;
-          }
-        }
 
-        throw err;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-      ;
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(ContributionStore, {
-  loadingCount: observable,
-  totalChf: observable,
-  errors: observable,
-  data: observable,
-  signatureData: observable,
-  loading: computed,
-  reset: action,
-  setData: action,
-  setInitialData: action,
-  postContribution: action,
-});
 
 export default new ContributionStore();

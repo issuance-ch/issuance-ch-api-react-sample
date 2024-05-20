@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
-import { useRouteMatch, Link } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
-import { Container, Col, Row } from 'reactstrap';
-import ListWrapper from '../../components/Subscription/ListWrapper';
+import React, { useEffect } from "react";
+import { useMatch, Link } from "react-router-dom";
+import { inject, observer } from "mobx-react";
+import { Container, Col, Row } from "reactstrap";
+import ListWrapper from "../../components/Subscription/ListWrapper";
 
 function SubscriptionList(props) {
-  const { url } = useRouteMatch();
+  const match = useMatch("/subscription");
   const { SubscriptionStore } = props;
   const { subscriptions, loading } = SubscriptionStore;
 
@@ -18,22 +18,26 @@ function SubscriptionList(props) {
       <Row>
         <Col>
           <Row className="justify-content-md-between align-items-md-center mb-3">
-            <Col xs="12" md={{ size: 'auto' }}>
-              <h1>Subscription <small>list</small></h1>
+            <Col xs="12" md={{ size: "auto" }}>
+              <h1>
+                Subscription <small>list</small>
+              </h1>
             </Col>
-            <Col xs="12" md={{ size: 'auto' }}>
-              <Link to={`${url}/new`} className="btn btn-primary w-100">New</Link>
+            <Col xs="12" md={{ size: "auto" }}>
+              <Link
+                to={`${match.pathnameBase}/new`}
+                className="btn btn-primary w-100"
+              >
+                New
+              </Link>
             </Col>
           </Row>
 
-          <ListWrapper
-            subscriptions={subscriptions}
-            loading={loading}
-          />
+          <ListWrapper subscriptions={subscriptions} loading={loading} />
         </Col>
       </Row>
     </Container>
   );
 }
 
-export default inject('SubscriptionStore')(observer(SubscriptionList));
+export default inject("SubscriptionStore")(observer(SubscriptionList));

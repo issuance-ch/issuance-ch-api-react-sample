@@ -1,7 +1,26 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { IcoDocuments, Subscriptions } from '../helpers/agent';
+import { makeObservable, observable, action, computed } from "mobx";
+import { IcoDocuments, Subscriptions } from "../helpers/agent";
 
 class IcoDocumentStore {
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      documentRegistry: observable,
+      dataRegistry: observable,
+      errorsRegistry: observable,
+      signatureRegistry: observable,
+      loading: computed,
+      reset: action,
+      loadDocument: action,
+      prepareFields: action,
+      setData: action,
+      resetErrors: action,
+      setErrors: action,
+      resetSignature: action,
+      setSignature: action,
+      postExtraDocument: action,
+    });
+  }
 
   loadingCount = 0;
   documentRegistry = observable.map();
@@ -48,22 +67,28 @@ class IcoDocumentStore {
     this.loadingCount++;
 
     return IcoDocuments.get(documentId)
-      .then(action(document => {
-        this.documentRegistry.set(documentId, document);
+      .then(
+        action((document) => {
+          this.documentRegistry.set(documentId, document);
 
-        this.prepareFields(documentId, document);
+          this.prepareFields(documentId, document);
 
-        return document;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+          return document;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   prepareFields(documentId, document) {
     const fields = {};
 
-    document.fields.forEach(field => {
-      fields[field.field_name] = field.field_type === 'FIELD_TYPE_CHECKBOX' ? false : '';
+    document.fields.forEach((field) => {
+      fields[field.field_name] =
+        field.field_type === "FIELD_TYPE_CHECKBOX" ? false : "";
     });
 
     this.dataRegistry.set(documentId, fields);
@@ -83,7 +108,7 @@ class IcoDocumentStore {
   resetErrors(documentId = null) {
     if (documentId) {
       this.errorsRegistry.delete(documentId);
-    } else  {
+    } else {
       this.errorsRegistry.clear();
     }
   }
@@ -108,48 +133,42 @@ class IcoDocumentStore {
     this.loadingCount++;
 
     return Subscriptions.extraDocument(subscriptionId, documentId, data)
-      .then(action(res => {
-        this.reset();
+      .then(
+        action((res) => {
+          this.reset();
 
-        return res;
-      }))
-      .catch(action(err => {
-        if (err.response && err.response.body && err.response.status && err.response.status === 400) {
-          const errors = {};
-  
-          if (err.response.body.err_msg) {
-            errors['form'] = err.response.body.err_msg;
+          return res;
+        })
+      )
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 400
+          ) {
+            const errors = {};
+
+            if (err.response.body.err_msg) {
+              errors["form"] = err.response.body.err_msg;
+            }
+            if (err.response.body.fields) {
+              errors["fields"] = err.response.body.fields;
+            }
+
+            this.setErrors(documentId, errors);
           }
-          if (err.response.body.fields) {
-            errors['fields'] = err.response.body.fields;
-          }
-  
-          this.setErrors(documentId, errors);
-        }
-        
-        throw err;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(IcoDocumentStore, {
-  loadingCount: observable,
-  documentRegistry: observable,
-  dataRegistry: observable,
-  errorsRegistry: observable,
-  signatureRegistry: observable,
-  loading: computed,
-  reset: action,
-  loadDocument: action,
-  prepareFields: action,
-  setData: action,
-  resetErrors: action,
-  setErrors: action,
-  resetSignature: action,
-  setSignature: action,
-  postExtraDocument: action,
-});
 
 export default new IcoDocumentStore();

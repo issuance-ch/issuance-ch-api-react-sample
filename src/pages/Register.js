@@ -1,29 +1,45 @@
-import React, { useEffect } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
-import { Container, Col, Row, Button, Spinner, Form, FormGroup, Input } from 'reactstrap';
-import FormErrors from '../components/FormErrors';
-import FieldErrors from '../components/FieldErrors';
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { inject, observer } from "mobx-react";
+import {
+  Container,
+  Col,
+  Row,
+  Button,
+  Spinner,
+  Form,
+  FormGroup,
+  Input,
+} from "reactstrap";
+import FormErrors from "../components/FormErrors";
+import FieldErrors from "../components/FieldErrors";
 
 function Register(props) {
   const { AccountStore } = props;
   const { values, errors, loading } = AccountStore;
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    return () => { AccountStore.reset(); }
+    return () => {
+      AccountStore.reset();
+    };
   }, [AccountStore]);
 
-  function handleUsernameChange(e) { AccountStore.setUsername(e.target.value); }
-  function handleEmailChange(e) { AccountStore.setEmail(e.target.value); }
-  function handlePasswordChange(e) { AccountStore.setPassword(e.target.value); }
+  function handleUsernameChange(e) {
+    AccountStore.setUsername(e.target.value);
+  }
+  function handleEmailChange(e) {
+    AccountStore.setEmail(e.target.value);
+  }
+  function handlePasswordChange(e) {
+    AccountStore.setPassword(e.target.value);
+  }
   function handleSubmitForm(e) {
     e.preventDefault();
 
     AccountStore.register()
-      .then(() => history.replace('/validate'))
-      .catch(err => { })
-      ;
+      .then(() => navigate("/validate", { replace: true }))
+      .catch((err) => {});
   }
 
   return (
@@ -40,29 +56,58 @@ function Register(props) {
           <Form onSubmit={handleSubmitForm}>
             <FormGroup>
               <Input
-                type="text" placeholder="Username" bsSize="lg" value={values.username} onChange={handleUsernameChange}
-                className={errors && errors.fields && errors.fields.username && 'is-invalid'}
+                type="text"
+                placeholder="Username"
+                bsSize="lg"
+                value={values.username}
+                onChange={handleUsernameChange}
+                className={
+                  errors &&
+                  errors.fields &&
+                  errors.fields.username &&
+                  "is-invalid"
+                }
               ></Input>
               <FieldErrors errors={errors} field="username" />
             </FormGroup>
 
             <FormGroup>
               <Input
-                type="email" placeholder="Email" bsSize="lg" value={values.email} onChange={handleEmailChange}
-                className={errors && errors.fields && errors.fields.email && 'is-invalid'}
+                type="email"
+                placeholder="Email"
+                bsSize="lg"
+                value={values.email}
+                onChange={handleEmailChange}
+                className={
+                  errors && errors.fields && errors.fields.email && "is-invalid"
+                }
               ></Input>
               <FieldErrors errors={errors} field="email" />
             </FormGroup>
 
             <FormGroup>
               <Input
-                type="password" placeholder="Password" bsSize="lg" value={values.password} onChange={handlePasswordChange}
-                className={errors && errors.fields && errors.fields.plainPassword && 'is-invalid'}
+                type="password"
+                placeholder="Password"
+                bsSize="lg"
+                value={values.password}
+                onChange={handlePasswordChange}
+                className={
+                  errors &&
+                  errors.fields &&
+                  errors.fields.plainPassword &&
+                  "is-invalid"
+                }
               ></Input>
               <FieldErrors errors={errors} field="plainPassword" />
             </FormGroup>
 
-            <Button color="primary" size="lg" disabled={loading} className="d-flex align-items-center">
+            <Button
+              color="primary"
+              size="lg"
+              disabled={loading}
+              className="d-flex align-items-center"
+            >
               {loading && <Spinner size="sm" className="mr-2" />}
               Sign Up
             </Button>
@@ -73,4 +118,4 @@ function Register(props) {
   );
 }
 
-export default inject('AccountStore')(observer(Register));
+export default inject("AccountStore")(observer(Register));

@@ -1,10 +1,19 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { Countries } from '../helpers/agent';
+import { observable, action, makeObservable, computed } from "mobx";
+import { Countries } from "../helpers/agent";
 
 class CountriesStore {
-
   loadingCount = 0;
-  countriesRegistry;
+  countriesRegistry = [];
+
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      countriesRegistry: observable,
+      loading: computed,
+      countries: computed,
+      loadCountries: action,
+    });
+  }
 
   get loading() {
     return this.loadingCount > 0;
@@ -24,23 +33,24 @@ class CountriesStore {
     this.loadingCount++;
 
     return Countries.list()
-      .then(action(countries => {
-        this.countriesRegistry = countries;
+      .then(
+        action((countries) => {
+          this.countriesRegistry = countries;
 
-        return this.countriesRegistry;
-      }))
-      .catch(action(err => { this.countriesRegistry = []; }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+          return this.countriesRegistry;
+        })
+      )
+      .catch(
+        action((err) => {
+          this.countriesRegistry = [];
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(CountriesStore, {
-  loadingCount: observable,
-  countriesRegistry: observable,
-  loading: computed,
-  countries: computed,
-  loadCountries: action,
-});
 
 export default new CountriesStore();

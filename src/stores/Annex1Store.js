@@ -1,12 +1,25 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { Annexes } from '../helpers/agent';
+import { makeObservable, observable, action, computed } from "mobx";
+import { Annexes } from "../helpers/agent";
 
 class Annex1Store {
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      errors: observable,
+      data: observable,
+      signatureData: observable,
+      loading: computed,
+      reset: action,
+      setData: action,
+      setSignatureData: action,
+      postAnnex1: action,
+    });
+  }
 
   loadingCount = 0;
   data = {
-    place: '',
-    sign: '',
+    place: "",
+    sign: "",
   };
   errors = {};
   signatureData = null;
@@ -16,8 +29,8 @@ class Annex1Store {
   }
 
   reset() {
-    this.data.place = '';
-    this.data.sign = '';
+    this.data.place = "";
+    this.data.sign = "";
 
     this.errors = {};
     this.signatureData = null;
@@ -41,7 +54,7 @@ class Annex1Store {
     }
 
     return path.reduce((prev, curr) => {
-      if (null === prev || typeof prev !== 'object') {
+      if (null === prev || typeof prev !== "object") {
         return null;
       }
 
@@ -61,38 +74,38 @@ class Annex1Store {
     this.loadingCount++;
 
     return Annexes.postAnnex1(subscriptionId, this.data)
-      .then(action(res => {
-        this.reset();
+      .then(
+        action((res) => {
+          this.reset();
 
-        return res;
-      }))
-      .catch(action(err => {
-        if (err.response && err.response.body && err.response.status && err.response.status === 400) {
-          if (err.response.body.err_msg) {
-            this.errors.form = err.response.body.err_msg;
+          return res;
+        })
+      )
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 400
+          ) {
+            if (err.response.body.err_msg) {
+              this.errors.form = err.response.body.err_msg;
+            }
+            if (err.response.body.fields) {
+              this.errors.fields = err.response.body.fields;
+            }
           }
-          if (err.response.body.fields) {
-            this.errors.fields = err.response.body.fields;
-          }
-        }
 
-        throw err;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-      ;
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(Annex1Store, {
-  loadingCount: observable,
-  errors: observable,
-  data: observable,
-  signatureData: observable,
-  loading: computed,
-  reset: action,
-  setData: action,
-  setSignatureData: action,
-  postAnnex1: action,
-});
 
 export default new Annex1Store();

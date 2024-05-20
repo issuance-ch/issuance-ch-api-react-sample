@@ -1,8 +1,31 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { Subscriptions } from '../helpers/agent';
-import ContributionStore from './ContributionStore';
+import { makeObservable, observable, action, computed } from "mobx";
+import { Subscriptions } from "../helpers/agent";
+import ContributionStore from "./ContributionStore";
 
 class SubscriptionStore {
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      finalizingCount: observable,
+      subscriptionRegistry: observable,
+      fillStatus: observable,
+      globalErrors: observable,
+      terms: observable,
+      iHaveNoMrz: observable,
+      modified: observable,
+      loading: computed,
+      subscriptions: computed,
+      loadSubscriptions: action,
+      loadSubscription: action,
+      createSubscription: action,
+      setModified: action,
+      removeModified: action,
+      patchSubscription: action,
+      loadFillStatus: action,
+      resetFillStatus: action,
+      patchPaymentStatus: action,
+    });
+  }
 
   loadingCount = 0;
   finalizingCount = 0;
@@ -26,7 +49,7 @@ class SubscriptionStore {
 
   get subscriptions() {
     return Array.from(this.subscriptionRegistry.values());
-  };
+  }
 
   getSubscription(id) {
     return this.subscriptionRegistry.get(id);
@@ -53,9 +76,11 @@ class SubscriptionStore {
   }
 
   setIHaveNoMrz(fileId, iHaveNoMrz) {
-    Subscriptions.patchFile(fileId, iHaveNoMrz).then(() => {
-      this.iHaveNoMrz = iHaveNoMrz;
-    }).catch(() => { });
+    Subscriptions.patchFile(fileId, iHaveNoMrz)
+      .then(() => {
+        this.iHaveNoMrz = iHaveNoMrz;
+      })
+      .catch(() => {});
   }
 
   getIHaveNoMrz() {
@@ -87,31 +112,45 @@ class SubscriptionStore {
     sessionStorage.setItem(`submitted-${id}`, true);
 
     return Subscriptions.finalize(id, { terms_accepted: acceptedTerms })
-      .then(action(fillStatus => {
-        this.fillStatus = fillStatus;
-        ContributionStore.setInitialData(this.fillStatus.groups.finalization.fields.contribution.value);
-        return fillStatus;
-      }))
-      .catch(action(err => {
-        throw err;
-      }))
-      .finally(action(() => { this.finalizingCount--; }))
-    ;
+      .then(
+        action((fillStatus) => {
+          this.fillStatus = fillStatus;
+          ContributionStore.setInitialData(
+            this.fillStatus.groups.finalization.fields.contribution.value
+          );
+          return fillStatus;
+        })
+      )
+      .catch(
+        action((err) => {
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.finalizingCount--;
+        })
+      );
   }
 
   loadSubscriptions() {
     this.loadingCount++;
 
     return Subscriptions.list()
-      .then(action(subscriptions => {
-        this.subscriptionRegistry.clear();
+      .then(
+        action((subscriptions) => {
+          this.subscriptionRegistry.clear();
 
-        subscriptions.forEach(subscription => {
-          this.subscriptionRegistry.set(subscription.id, subscription);
-        });
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+          subscriptions.forEach((subscription) => {
+            this.subscriptionRegistry.set(subscription.id, subscription);
+          });
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   loadSubscription(id, { acceptCached = false } = {}) {
@@ -126,26 +165,34 @@ class SubscriptionStore {
     this.loadingCount++;
 
     return Subscriptions.get(id)
-      .then(action(subscription => {
-        this.subscriptionRegistry.set(subscription.id, subscription);
+      .then(
+        action((subscription) => {
+          this.subscriptionRegistry.set(subscription.id, subscription);
 
-        return subscription;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+          return subscription;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   createSubscription(icoId, registerAs) {
     this.loadingCount++;
 
     return Subscriptions.create(icoId, registerAs)
-      .then(subscription => {
+      .then((subscription) => {
         this.subscriptionRegistry.set(subscription.id, subscription);
 
         return subscription;
       })
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   isStepModified(groupName, fieldName = null) {
@@ -169,8 +216,8 @@ class SubscriptionStore {
     if (!this.modified[groupName][fieldName]) {
       this.modified[groupName][fieldName] = {};
     }
-    
-    this.modified[groupName][fieldName]['value'] = value;
+
+    this.modified[groupName][fieldName]["value"] = value;
 
     if (this.hasFieldError(fullFieldName)) {
       delete this.errors.fields[fullFieldName];
@@ -196,34 +243,39 @@ class SubscriptionStore {
     return !!(this.errors && this.errors.fields && this.errors.fields[field]);
   }
 
-  patchSubscription(groupName, fieldsName = 'fields') {
+  patchSubscription(groupName, fieldsName = "fields") {
     this.setGlobalErrors(null);
     const subscriptionId = this.fillStatus.subscription_id;
     const data = {
       subscription_id: subscriptionId,
       groups: {
         [groupName]: {
-          [fieldsName]: this.modified[groupName]
-        }
-      }
-    }
+          [fieldsName]: this.modified[groupName],
+        },
+      },
+    };
 
     this.loadingCount++;
 
     this.errors = {};
 
     return Subscriptions.patch(subscriptionId, data)
-      .then(action(fillStatus => {
-        this.resetFillStatus();
-        this.fillStatus = fillStatus;
-        this.mrzError = false;
-        this.idFileId = null;
-      }))
-      .catch(err => {
+      .then(
+        action((fillStatus) => {
+          this.resetFillStatus();
+          this.fillStatus = fillStatus;
+          this.mrzError = false;
+          this.idFileId = null;
+        })
+      )
+      .catch((err) => {
         this.errors = err.response.body;
       })
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   deleteSubscription(id) {
@@ -232,16 +284,19 @@ class SubscriptionStore {
     this.errors = {};
 
     return Subscriptions.delete(id)
-      .then(subscription => {
+      .then((subscription) => {
         this.subscriptionRegistry.delete(subscription.id);
 
         return subscription;
       })
-      .catch(err => {
+      .catch((err) => {
         this.errors = err.response.body;
       })
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   loadFillStatus(id) {
@@ -251,12 +306,19 @@ class SubscriptionStore {
     this.setGlobalErrors(null);
 
     return Subscriptions.getFillStatus(id)
-      .then(action(fillStatus => {
-        this.fillStatus = fillStatus;
-        ContributionStore.setInitialData(this.fillStatus.groups.finalization.fields.contribution.value);
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+      .then(
+        action((fillStatus) => {
+          this.fillStatus = fillStatus;
+          ContributionStore.setInitialData(
+            this.fillStatus.groups.finalization.fields.contribution.value
+          );
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   resetFillStatus() {
@@ -265,7 +327,13 @@ class SubscriptionStore {
   }
 
   uploadFile(fileName, fileBase64, fileType, iHaveNoMrz) {
-    return Subscriptions.uploadFile(this.fillStatus.subscription_id, fileName, fileBase64, fileType, iHaveNoMrz);
+    return Subscriptions.uploadFile(
+      this.fillStatus.subscription_id,
+      fileName,
+      fileBase64,
+      fileType,
+      iHaveNoMrz
+    );
   }
 
   patchPaymentStatus(subscriptionId, currencies) {
@@ -275,34 +343,15 @@ class SubscriptionStore {
 
     return Subscriptions.patchPaymentStatus(subscriptionId, currencies)
       .then()
-      .catch(err => {
+      .catch((err) => {
         this.errors = err.response.body;
       })
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(SubscriptionStore, {
-  loadingCount: observable,
-  finalizingCount: observable,
-  subscriptionRegistry: observable,
-  fillStatus: observable,
-  globalErrors: observable,
-  terms: observable,
-  iHaveNoMrz: observable,
-  modified: observable,
-  loading: computed,
-  subscriptions: computed,
-  loadSubscriptions: action,
-  loadSubscription: action,
-  createSubscription: action,
-  setModified: action,
-  removeModified: action,
-  patchSubscription: action,
-  loadFillStatus: action,
-  resetFillStatus: action,
-  patchPaymentStatus: action,
-});
 
 export default new SubscriptionStore();

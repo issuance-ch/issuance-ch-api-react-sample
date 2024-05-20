@@ -1,8 +1,19 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { Icos } from '../helpers/agent';
-import { PROJECTS_TO_DISPLAY } from '../config';
+import { makeObservable, observable, action, computed } from "mobx";
+import { Icos } from "../helpers/agent";
+import { PROJECTS_TO_DISPLAY } from "../config";
 
 class IcoStore {
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      icosRegistry: observable,
+      logoRegistry: observable,
+      loading: computed,
+      icos: computed,
+      loadIcos: action,
+      loadLogo: action,
+    });
+  }
 
   loadingCount = 0;
   icosRegistry = observable.map();
@@ -15,7 +26,7 @@ class IcoStore {
 
   get icos() {
     return Array.from(this.icosRegistry.values());
-  };
+  }
 
   getLogo(id) {
     return this.logoRegistry.get(id);
@@ -25,27 +36,35 @@ class IcoStore {
     this.loadingCount++;
 
     return Icos.list()
-      .then(action(icos => {
-        this.icosRegistry.clear();
+      .then(
+        action((icos) => {
+          this.icosRegistry.clear();
 
-        Object.keys(icos).forEach(key => {
-          let projectToBeDisplayed = false;
-          if (!PROJECTS_TO_DISPLAY) {
-            projectToBeDisplayed = true;
-          } else {
-            PROJECTS_TO_DISPLAY.forEach(identifier => {
-              if (identifier === icos[key].id || identifier === icos[key].slug) {
-                projectToBeDisplayed = true;
-              }
-            });
-          }
-          if (projectToBeDisplayed) {
-            this.icosRegistry.set(icos[key].id, icos[key]);
-          }
-        });
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-      ;
+          Object.keys(icos).forEach((key) => {
+            let projectToBeDisplayed = false;
+            if (!PROJECTS_TO_DISPLAY) {
+              projectToBeDisplayed = true;
+            } else {
+              PROJECTS_TO_DISPLAY.forEach((identifier) => {
+                if (
+                  identifier === icos[key].id ||
+                  identifier === icos[key].slug
+                ) {
+                  projectToBeDisplayed = true;
+                }
+              });
+            }
+            if (projectToBeDisplayed) {
+              this.icosRegistry.set(icos[key].id, icos[key]);
+            }
+          });
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
 
   loadLogo(id, { acceptCached = false } = {}) {
@@ -58,42 +77,39 @@ class IcoStore {
     }
 
     return Icos.logo(id)
-      .then(action(res => {
-        this.logoRegistry.set(id, URL.createObjectURL(res));
-      }))
-      .catch(action(err => {
-        if (err && err.response && err.response.status !== 404) {
-          throw err;
-        }
+      .then(
+        action((res) => {
+          this.logoRegistry.set(id, URL.createObjectURL(res));
+        })
+      )
+      .catch(
+        action((err) => {
+          if (err && err.response && err.response.status !== 404) {
+            throw err;
+          }
 
-        this.logoRegistry.set(id, null);
-      }))
-      ;
+          this.logoRegistry.set(id, null);
+        })
+      );
   }
 
   loadIco(id) {
     return Icos.ico(id)
-      .then(action(res => {
-        this.icoRegistry.set(id, res);
-      }))
-      .catch(action(err => {
-        if (err && err.response && err.response.status !== 404) {
-          throw err;
-        }
+      .then(
+        action((res) => {
+          this.icoRegistry.set(id, res);
+        })
+      )
+      .catch(
+        action((err) => {
+          if (err && err.response && err.response.status !== 404) {
+            throw err;
+          }
 
-        this.icoRegistry.set(id, null);
-      }))
-      ;
+          this.icoRegistry.set(id, null);
+        })
+      );
   }
 }
-decorate(IcoStore, {
-  loadingCount: observable,
-  icosRegistry: observable,
-  logoRegistry: observable,
-  loading: computed,
-  icos: computed,
-  loadIcos: action,
-  loadLogo: action
-});
 
 export default new IcoStore();

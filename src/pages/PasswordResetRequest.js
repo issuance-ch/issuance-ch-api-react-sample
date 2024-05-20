@@ -1,29 +1,40 @@
-import React, { useEffect } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
-import { Container, Col, Row, Button, Spinner, Form, FormGroup, Input } from 'reactstrap';
-import FormErrors from '../components/FormErrors';
-import FieldErrors from '../components/FieldErrors';
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { inject, observer } from "mobx-react";
+import {
+  Container,
+  Col,
+  Row,
+  Button,
+  Spinner,
+  Form,
+  FormGroup,
+  Input,
+} from "reactstrap";
+import FormErrors from "../components/FormErrors";
+import FieldErrors from "../components/FieldErrors";
 
 function PasswordResetRequest(props) {
   const { AccountStore } = props;
   const { values, errors, loading } = AccountStore;
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    return () => { AccountStore.reset(); }
+    return () => {
+      AccountStore.reset();
+    };
   }, [AccountStore]);
 
-  function handleEmailChange(e) { AccountStore.setEmail(e.target.value); }
+  function handleEmailChange(e) {
+    AccountStore.setEmail(e.target.value);
+  }
   function handleSubmitForm(e) {
     e.preventDefault();
 
     AccountStore.passwordResetRequest()
-      .then(() => history.replace('/password-reset/update'))
-      .catch(err => {
-      })
-      ;
-  };
+      .then(() => navigate("/password-reset/update", { replace: true }))
+      .catch((err) => {});
+  }
 
   return (
     <Container className="password-reset-container">
@@ -39,13 +50,24 @@ function PasswordResetRequest(props) {
           <Form onSubmit={handleSubmitForm}>
             <FormGroup>
               <Input
-                type="email" placeholder="Email" bsSize="lg" value={values.email} onChange={handleEmailChange}
-                className={errors && errors.fields && errors.fields.email && 'is-invalid'}
+                type="email"
+                placeholder="Email"
+                bsSize="lg"
+                value={values.email}
+                onChange={handleEmailChange}
+                className={
+                  errors && errors.fields && errors.fields.email && "is-invalid"
+                }
               ></Input>
               <FieldErrors errors={errors} field="email" />
             </FormGroup>
 
-            <Button color="primary" size="lg" disabled={loading} className="d-flex align-items-center">
+            <Button
+              color="primary"
+              size="lg"
+              disabled={loading}
+              className="d-flex align-items-center"
+            >
               {loading && <Spinner size="sm" className="mr-2" />}
               Request
             </Button>
@@ -56,4 +78,4 @@ function PasswordResetRequest(props) {
   );
 }
 
-export default inject('AccountStore')(observer(PasswordResetRequest));
+export default inject("AccountStore")(observer(PasswordResetRequest));

@@ -1,32 +1,44 @@
-import React, { useEffect } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
-import { Container, Col, Row, Button, Spinner, Form, FormGroup, Input } from 'reactstrap';
-import FormErrors from '../components/FormErrors';
-import FieldErrors from '../components/FieldErrors';
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { inject, observer } from "mobx-react";
+import {
+  Container,
+  Col,
+  Row,
+  Button,
+  Spinner,
+  Form,
+  FormGroup,
+  Input,
+} from "reactstrap";
+import FormErrors from "../components/FormErrors";
+import FieldErrors from "../components/FieldErrors";
 
 function Validate(props) {
   const { AccountStore } = props;
   const { values, errors, loading } = AccountStore;
-  const history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    return () => { AccountStore.reset(); }
+    return () => {
+      AccountStore.reset();
+    };
   }, [AccountStore]);
 
-  function handleCodeChange(e) { AccountStore.setCode(e.target.value); }
+  function handleCodeChange(e) {
+    AccountStore.setCode(e.target.value);
+  }
   function handleSubmitForm(e) {
     e.preventDefault();
 
     AccountStore.validate()
-      .then(() => history.replace('/'))
-      .catch(err => {
+      .then(() => navigate("/", { replace: true }))
+      .catch((err) => {
         if (err && err.response && err.response.status === 401) {
-          history.replace('/')
+          navigate("/", { replace: true });
         }
-      })
-      ;
-  };
+      });
+  }
 
   return (
     <Container className="account-validate-container">
@@ -42,13 +54,24 @@ function Validate(props) {
           <Form onSubmit={handleSubmitForm}>
             <FormGroup>
               <Input
-                type="text" placeholder="Code" bsSize="lg" value={values.code} onChange={handleCodeChange}
-                className={errors && errors.fields && errors.fields.code && 'is-invalid'}
+                type="text"
+                placeholder="Code"
+                bsSize="lg"
+                value={values.code}
+                onChange={handleCodeChange}
+                className={
+                  errors && errors.fields && errors.fields.code && "is-invalid"
+                }
               ></Input>
               <FieldErrors errors={errors} field="code" />
             </FormGroup>
 
-            <Button color="primary" size="lg" disabled={loading} className="d-flex align-items-center">
+            <Button
+              color="primary"
+              size="lg"
+              disabled={loading}
+              className="d-flex align-items-center"
+            >
               {loading && <Spinner size="sm" className="mr-2" />}
               Validate
             </Button>
@@ -59,4 +82,4 @@ function Validate(props) {
   );
 }
 
-export default inject('AccountStore')(observer(Validate));
+export default inject("AccountStore")(observer(Validate));

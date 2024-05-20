@@ -1,26 +1,32 @@
-import React from 'react';
-import { Switch, Route, useRouteMatch } from 'react-router-dom';
-import SubscriptionList from './List';
-import SubscriptionNew from './New';
-import SubscriptionEdit from './Edit';
-import SubscriptionPaymentStatus from './PaymentStatus';
-import SubscriptionVideoConference from './VideoConference';
-import SubscriptionVideoConferenceBooking from './VideoConferenceBooking';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import SubscriptionList from "./List";
+import SubscriptionNew from "./New";
+import SubscriptionEdit from "./Edit";
+import SubscriptionPaymentStatus from "./PaymentStatus";
+import SubscriptionVideoConference from "./VideoConference";
+import SubscriptionVideoConferenceBooking from "./VideoConferenceBooking";
 
 function Subscription(props) {
-  const { path } = useRouteMatch();
-
   return (
-    <Switch>
-      <Route exact path={path} component={SubscriptionList} />
-      <Route path={`${path}/new`} component={SubscriptionNew} />
-      <Route path={`${path}/payment-status/:id`} component={SubscriptionPaymentStatus} />
-      <Route path={`${path}/video-conference/:id`} component={SubscriptionVideoConference} />
-      <Route path={`${path}/video-conference-booking/:id`} component={SubscriptionVideoConferenceBooking} />
-      <Route path={`${path}/:id`} component={SubscriptionEdit} />
-    </Switch>
+    <Routes>
+      <Route path={``} element={<SubscriptionList />} />
+      <Route path={`new`} element={<SubscriptionNew />} />
+      <Route
+        path={`payment-status/:id`}
+        element={<SubscriptionPaymentStatus />}
+      />
+      <Route
+        path={`video-conference/:id`}
+        element={<SubscriptionVideoConference />}
+      />
+      <Route
+        path={`video-conference-booking/:id`}
+        element={<SubscriptionVideoConferenceBooking />}
+      />
+      <Route path={`:id`} element={<SubscriptionEdit />} />
+    </Routes>
   );
 }
 
 export default Subscription;
-

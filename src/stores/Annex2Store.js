@@ -1,33 +1,49 @@
-import { decorate, observable, action, computed } from 'mobx';
-import { Annexes } from '../helpers/agent';
+import { makeObservable, observable, action, computed } from "mobx";
+import { Annexes } from "../helpers/agent";
 
 class Annex2Store {
-
   loadingCount = 0;
   personTemplate = {
-    name: '',
-    date_of_birth: '',
-    address: '',
-    nationality: ''
+    name: "",
+    date_of_birth: "",
+    address: "",
+    nationality: "",
   };
   data = {
-    corporate_name: '',
-    sign: '',
-    place: '',
-    people: [{...this.personTemplate}]
+    corporate_name: "",
+    sign: "",
+    place: "",
+    people: [{ ...this.personTemplate }],
   };
   errors = {};
   signatureData = null;
+
+  constructor() {
+    makeObservable(this, {
+      loadingCount: observable,
+      errors: observable,
+      data: observable,
+      signatureData: observable,
+      loading: computed,
+      reset: action,
+      setData: action,
+      // setSignature: action,
+      addPerson: action,
+      removePerson: action,
+      setPersonData: action,
+      // postAnnex1: action,
+    });
+  }
 
   get loading() {
     return this.loadingCount > 0;
   }
 
   reset() {
-    this.data.corporate_name = '';
-    this.data.sign = '';
-    this.data.place = '';
-    this.data.people = [{...this.personTemplate}];
+    this.data.corporate_name = "";
+    this.data.sign = "";
+    this.data.place = "";
+    this.data.people = [{ ...this.personTemplate }];
 
     this.errors = {};
     this.signatureData = null;
@@ -44,14 +60,14 @@ class Annex2Store {
   }
 
   getError(field) {
-    const path = Array.isArray(field) ? field : [ field ];
+    const path = Array.isArray(field) ? field : [field];
 
     if (!this.errors.fields) {
       return false;
     }
 
     return path.reduce((prev, curr) => {
-      if (null === prev || typeof prev !== 'object') {
+      if (null === prev || typeof prev !== "object") {
         return null;
       }
 
@@ -68,7 +84,7 @@ class Annex2Store {
   }
 
   addPerson() {
-    return this.data.people.push({...this.personTemplate});
+    return this.data.people.push({ ...this.personTemplate });
   }
 
   removePerson(index = null) {
@@ -84,12 +100,15 @@ class Annex2Store {
   }
 
   setPersonData(index, fieldName, fieldValue) {
-    if (index in this.data['people'] && fieldName in this.data['people'][index]) {
-      this.data['people'][index][fieldName] = fieldValue;
+    if (
+      index in this.data["people"] &&
+      fieldName in this.data["people"][index]
+    ) {
+      this.data["people"][index][fieldName] = fieldValue;
     }
 
-    if (this.hasError(['people', index, fieldName])) {
-      delete this.errors.fields['people'][index][fieldName];
+    if (this.hasError(["people", index, fieldName])) {
+      delete this.errors.fields["people"][index][fieldName];
     }
   }
 
@@ -97,41 +116,38 @@ class Annex2Store {
     this.loadingCount++;
 
     return Annexes.postAnnex2(subscriptionId, this.data)
-      .then(action(res => {
-        this.reset();
+      .then(
+        action((res) => {
+          this.reset();
 
-        return res;
-      }))
-      .catch(action(err => {
-        if (err.response && err.response.body && err.response.status && err.response.status === 400) {
-          if (err.response.body.err_msg) {
-            this.errors.form = err.response.body.err_msg;
+          return res;
+        })
+      )
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 400
+          ) {
+            if (err.response.body.err_msg) {
+              this.errors.form = err.response.body.err_msg;
+            }
+            if (err.response.body.fields) {
+              this.errors.fields = err.response.body.fields;
+            }
           }
-          if (err.response.body.fields) {
-            this.errors.fields = err.response.body.fields;
-          }
-        }
-        
-        throw err;
-      }))
-      .finally(action(() => { this.loadingCount--; }))
-    ;
+
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.loadingCount--;
+        })
+      );
   }
-
 }
-decorate(Annex2Store, {
-  loadingCount: observable,
-  errors: observable,
-  data: observable,
-  signatureData: observable,
-  loading: computed,
-  reset: action,
-  setData: action,
-  setSignature: action,
-  addPerson: action,
-  removePerson: action,
-  setPersonData: action,
-  postAnnex1: action,
-});
 
 export default new Annex2Store();
