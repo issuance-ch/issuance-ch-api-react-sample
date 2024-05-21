@@ -1,15 +1,15 @@
-import superagent from 'superagent';
-import CommonStore from '../stores/CommonStore';
-import AccountStore from '../stores/AccountStore';
-import { API_ROOT } from '../config';
+import superagent from "superagent";
+import CommonStore from "../stores/CommonStore";
+import AccountStore from "../stores/AccountStore";
+import { API_ROOT } from "../config";
 
-const tokenPlugin = req => {
+const tokenPlugin = (req) => {
   if (CommonStore.token) {
-    req.set('Authorization', `Bearer ${CommonStore.token}`);
+    req.set("Authorization", `Bearer ${CommonStore.token}`);
   }
 };
 
-const handleErrors = err => {
+const handleErrors = (err) => {
   if (err && err.response && err.response.status === 401) {
     AccountStore.logout();
   }
@@ -17,99 +17,93 @@ const handleErrors = err => {
   throw err;
 };
 
-const responseBody = res => {
-  return res.body
+const responseBody = (res) => {
+  return res.body;
 };
 
 const requests = {
-  del: url =>
+  del: (url) =>
     superagent
       .del(`${API_ROOT}${url}`)
       .use(tokenPlugin)
       .then(responseBody)
-      .catch(handleErrors)
-  ,
-  get: url =>
+      .catch(handleErrors),
+  get: (url) =>
     superagent
       .get(`${API_ROOT}${url}`)
       .use(tokenPlugin)
       .then(responseBody)
-      .catch(handleErrors)
-  ,
-  getBlob: url =>
+      .catch(handleErrors),
+  getBlob: (url) =>
     superagent
       .get(`${API_ROOT}${url}`)
-      .responseType('blob')
+      .responseType("blob")
       .use(tokenPlugin)
       .then(responseBody)
-      .catch(handleErrors)
-  ,
+      .catch(handleErrors),
   patch: (url, body) =>
     superagent
       .patch(`${API_ROOT}${url}`, body)
       .use(tokenPlugin)
       .then(responseBody)
-      .catch(handleErrors)
-  ,
+      .catch(handleErrors),
   post: (url, body) =>
     superagent
       .post(`${API_ROOT}${url}`, body)
       .use(tokenPlugin)
       .then(responseBody)
-      .catch(handleErrors)
+      .catch(handleErrors),
 };
 
 const Accounts = {
   register: (username, email, plainPassword) => {
-    let data = { username, email, plainPassword, telephone: '', confirmBy: 'email' };
-    if (window.sessionStorage.getItem('referral')) {
-      data.referal = window.sessionStorage.getItem('referral');
+    let data = {
+      username,
+      email,
+      plainPassword,
+      telephone: "",
+      confirmBy: "email",
+    };
+    if (window.sessionStorage.getItem("referral")) {
+      data.referal = window.sessionStorage.getItem("referral");
     }
-    return requests.post('/register', data);
+    return requests.post("/register", data);
   },
-  validate: (code) =>
-    requests.post('/validate', { code }),
+  validate: (code) => requests.post("/validate", { code }),
   validateResend: (email) =>
-    requests.post('/validate/resend', { email, confirmBy: 'email' }),
+    requests.post("/validate/resend", { email, confirmBy: "email" }),
   login: (username, password) =>
-    requests.post('/auth_token', { username, password }),
+    requests.post("/auth_token", { username, password }),
   passwordResetRequest: (email) =>
-    requests.post('/account/reset-password/request', { email }),
+    requests.post("/account/reset-password/request", { email }),
   passwordResetUpdate: (token, password) =>
-    requests.post('/account/reset-password/update', { token, password }),
+    requests.post("/account/reset-password/update", { token, password }),
 };
 
 const Countries = {
-  list: () =>
-    requests.get('/countries')
+  list: () => requests.get("/countries"),
 };
 
 const Customers = {
-  me: () =>
-    requests.get('/customers/me'),
+  me: () => requests.get("/customers/me"),
 };
 
 const Icos = {
-  list: () =>
-    requests.get('/icos'),
-  logo: (id) =>
-    requests.getBlob(`/icos/${id}/logo`),
-  ico: (id) =>
-    requests.get(`/icos/${id}`)
+  list: () => requests.get("/icos"),
+  logo: (id) => requests.getBlob(`/icos/${id}/logo`),
+  ico: (id) => requests.get(`/icos/${id}`),
 };
 
 const IcoDocuments = {
-  list: (icoId) =>
-    requests.get(`/ico/${icoId}/extra-documents`),
-  get: (documentId) =>
-    requests.get(`/extra-documents/${documentId}`),
+  list: (icoId) => requests.get(`/ico/${icoId}/extra-documents`),
+  get: (documentId) => requests.get(`/extra-documents/${documentId}`),
 };
 
 const Annexes = {
   postAnnex1: (subscriptionId, data) =>
     requests.post(`/subscriptions/${subscriptionId}/annex1/simple`, {
       place: data.place,
-      sign: data.sign
+      sign: data.sign,
     }),
   postAnnex2: (subscriptionId, data) =>
     requests.post(`/subscriptions/${subscriptionId}/annex2`, data),
@@ -120,9 +114,13 @@ const Pol = {
     requests.post(`/id-check`, {
       caseId,
       ocrData,
-      subscription
+      subscription,
     }),
+  initUrl: (subscriptionId) =>
+    requests.get(`/id-check/${subscriptionId}/init`, {}),
 
+  completePol: (subscriptionId) =>
+    requests.get(`/id-check/${subscriptionId}/status`, {}),
 };
 
 const Contribution = {
@@ -131,64 +129,79 @@ const Contribution = {
       data.coupon = coupon;
     }
     data.simulation = simulation;
-    return requests.patch(`/subscriptions/${subscriptionId}/contribution`, data)
+    return requests.patch(
+      `/subscriptions/${subscriptionId}/contribution`,
+      data
+    );
   },
-  getContributionEstimation: (subscriptionId, data, coupon, simulation = true) => {
+  getContributionEstimation: (
+    subscriptionId,
+    data,
+    coupon,
+    simulation = true
+  ) => {
     if (coupon) {
       data.coupon = coupon;
     }
     data.simulation = simulation;
-    return requests.post(`/subscriptions/${subscriptionId}/share-price-estimation`, data)
+    return requests.post(
+      `/subscriptions/${subscriptionId}/share-price-estimation`,
+      data
+    );
   },
 
   checkCoupon: (icoId, couponCode) => {
-    return requests.get(`/icos/${icoId}/coupon?code=${couponCode}`)
-  }
+    return requests.get(`/icos/${icoId}/coupon?code=${couponCode}`);
+  },
 };
 
 const Subscriptions = {
-  list: () =>
-    requests.get('/subscriptions'),
-  get: (id) =>
-    requests.get(`/subscriptions/${id}`),
-  delete: (id) =>
-    requests.del(`/subscriptions/${id}`),
+  list: () => requests.get("/subscriptions"),
+  get: (id) => requests.get(`/subscriptions/${id}`),
+  delete: (id) => requests.del(`/subscriptions/${id}`),
   create: (icoId, registerAs) =>
-    requests.post('/subscriptions', { ico: icoId, register_as: registerAs }),
-  patch: (id, data) =>
-    requests.patch(`/subscriptions/${id}`, data),
-  getFillStatus: (id) =>
-    requests.get(`/subscriptions/${id}/fill-status`),
+    requests.post("/subscriptions", { ico: icoId, register_as: registerAs }),
+  patch: (id, data) => requests.patch(`/subscriptions/${id}`, data),
+  getFillStatus: (id) => requests.get(`/subscriptions/${id}/fill-status`),
   uploadFile: (id, filename, file, type, iHaveNoMrz) => {
     let data = { filename, file, type };
     if (iHaveNoMrz) {
       data.no_mrz_uploaded = true;
     }
-    return requests.post(`/subscriptions/${id}/files`, data)
+    return requests.post(`/subscriptions/${id}/files`, data);
   },
   patchFile: (id, iHaveNoMrz) => {
     let data = {
-      "no_mrz_uploaded": !!iHaveNoMrz
+      no_mrz_uploaded: !!iHaveNoMrz,
     };
-    return requests.patch(`/file/${id}`, data)
+    return requests.patch(`/file/${id}`, data);
   },
   extraDocument: (id, documentId, data) =>
     requests.post(`/subscriptions/${id}/extra-document/${documentId}`, data),
-  finalize: (id, data) =>
-    requests.post(`/subscriptions/${id}/submit`, data),
+  finalize: (id, data) => requests.post(`/subscriptions/${id}/submit`, data),
   patchPaymentStatus: (id, data) =>
     requests.patch(`/subscriptions/${id}/payment-status`, data),
 };
 
 const VideoConference = {
-  list: () =>
-    requests.get('/video-conference-planning/slots'),
+  list: () => requests.get("/video-conference-planning/slots"),
   book: (slotId, subscriptionId, preferredLanguage) =>
-    requests.post('/video-conference-planning/slots/book', {
+    requests.post("/video-conference-planning/slots/book", {
       slot_id: slotId,
       subscription_id: subscriptionId,
-      preferred_language: preferredLanguage
+      preferred_language: preferredLanguage,
     }),
 };
 
-export { Accounts, Countries, Customers, Icos, IcoDocuments, Annexes, Subscriptions, Contribution, VideoConference, Pol };
+export {
+  Accounts,
+  Countries,
+  Customers,
+  Icos,
+  IcoDocuments,
+  Annexes,
+  Subscriptions,
+  Contribution,
+  VideoConference,
+  Pol,
+};

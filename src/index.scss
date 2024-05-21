@@ -180,6 +180,50 @@ label.required:after {
   color: $green;
 }
 
+.full-screen-overlay {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0vh;
+  left: 0vw;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 3;
+  .full-screen-content {
+      position: fixed;
+      width: 90vw;
+      height: 90vh;
+      top: 5vh;
+      left: 5vw;
+      display: flex;
+      flex-direction: column;
+
+      .full-screen {
+        width: 100%;
+        flex-grow: 1;
+      }
+  }
+}
+
+.close-iframe {
+  background-color: white;
+  padding: 8px;
+  width: 90vw;
+
+  margin: auto;
+  display: flex;
+  justify-content: end;
+
+  .btn-close {
+      border: none;
+      color: #333;
+
+      &:hover {
+          color: #2aacff;
+      }
+  }
+}
+
+
 iframe.video-conference {
   width: 100%;
   min-height: 300px;
