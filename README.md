@@ -1,12 +1,18 @@
-# Issuance React sample
+# alt.co whitelabel portal React sample
 
-This is a React implementation of the issuance.ch platform. It communicates directly with Altcoinomy's API.
+This is a React implementation of the issuance.ch platform. It communicates directly with alt.co's API.
 
 You will find the React application as well as a demonstration of how to implement it in your webpage.
 
-## Deploy the React app
+## Deploy the whitelabel portal React app
 
 For this purpose we assume that you have npm installed on your machine.
+Otherwise:
+`sudo apt install npm`
+
+### Download the whitelabel portal React app
+
+`git clone https://github.com/issuance-ch/issuance-ch-api-react-sample.git`
 
 ### Development
 
@@ -15,6 +21,7 @@ If you want to change the design of the embeded platform, you can edit the curre
 Run the following commands:
 
 ```bash
+cd issuance-ch-api-react-sample/
 npm install
 cp src/config.js.spec src/config.js
 npm start
