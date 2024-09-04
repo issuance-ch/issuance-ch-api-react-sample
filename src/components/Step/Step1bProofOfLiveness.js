@@ -94,7 +94,7 @@ function Step1bProofOfLiveness(props) {
       name={groupName}
       header={
         toJS(fillStatus.groups.basics.fields.subscribed_as.value) ===
-        "individual"
+          "individual"
           ? "Proof of liveness"
           : "Signatory identification documents"
       }
@@ -103,7 +103,7 @@ function Step1bProofOfLiveness(props) {
       {...otherProps}
     >
       {toJS(fillStatus.groups.basics.fields.subscribed_as.value) ===
-      "individual" ? (
+        "individual" ? (
         <>
           <p>We use an automated identity checking process.</p>
           <p>
@@ -167,13 +167,13 @@ function Step1bProofOfLiveness(props) {
         <div className="alert alert-info">{display.msg.filled}</div>
       )}
 
-      <Button color="primary" onClick={() => startPol()}>
+      {polStatus !== "ACCEPTED" && <Button color="primary" onClick={() => startPol()}>
         {(polStatus === "REFUSED" || polError) && display.btns.retry}
-        {(polStatus === "FILLED" || polStatus === "ACCEPTED") &&
+        {(polStatus === "FILLED") &&
           !polError &&
           display.btns.update}
         {polStatus === "EMPTY" && !polError && display.btns.start}
-      </Button>
+      </Button>}
     </CollapsibleCard>
   );
 }
