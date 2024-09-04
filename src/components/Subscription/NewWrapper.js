@@ -60,7 +60,7 @@ function SubscriptionNewWrapper(props) {
                   <td>
                     {
                       !isExpired &&
-                      <Button color="primary" disabled={loadingSubscription} onClick={() => {participate(ico.id, registerAs)}} className="d-flex align-items-center ml-auto">
+                      <Button color="primary" disabled={loadingSubscription} onClick={() => {participate(ico, registerAs)}} className="d-flex align-items-center ml-auto">
                         {loadingSubscription && <Spinner size="sm" className="mr-2" />}
                         Participate
                       </Button>
