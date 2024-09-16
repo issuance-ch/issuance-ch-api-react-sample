@@ -10,6 +10,7 @@ class SubscriptionStore {
       subscriptionRegistry: observable,
       fillStatus: observable,
       globalErrors: observable,
+      finalizingError: observable,
       terms: observable,
       iHaveNoMrz: observable,
       modified: observable,
@@ -32,6 +33,7 @@ class SubscriptionStore {
   subscriptionRegistry = observable.map();
   fillStatus = null;
   globalErrors = [];
+  finalizingError = "";
   terms = false;
   modified = {};
   errors = {};
@@ -80,7 +82,7 @@ class SubscriptionStore {
       .then(() => {
         this.iHaveNoMrz = iHaveNoMrz;
       })
-      .catch(() => {});
+      .catch(() => { });
   }
 
   getIHaveNoMrz() {
@@ -110,6 +112,7 @@ class SubscriptionStore {
   finalize(id, acceptedTerms) {
     this.finalizingCount++;
     sessionStorage.setItem(`submitted-${id}`, true);
+    this.finalizingError = "";
 
     return Subscriptions.finalize(id, { terms_accepted: acceptedTerms })
       .then(
@@ -123,6 +126,7 @@ class SubscriptionStore {
       )
       .catch(
         action((err) => {
+          this.finalizingError = err?.response?.body?.err_msg || "An unknown error occurred";
           throw err;
         })
       )

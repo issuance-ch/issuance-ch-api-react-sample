@@ -22,7 +22,7 @@ import CustomInput from 'reactstrap/lib/CustomInput';
 
 function SubscriptionEditWrapper(props) {
   const { subscription, fillStatus, loading, SubscriptionStore, finalizing } = props;
-  const { globalErrors } = SubscriptionStore;
+  const { globalErrors, finalizingError } = SubscriptionStore;
   const terms = SubscriptionStore.getTerms();
   const [stepOpen, setStepOpen] = useState();
   const [shown, setShown] = useState();
@@ -156,6 +156,8 @@ function SubscriptionEditWrapper(props) {
           </Button>
 
         </Col>
+
+
         {
           fillStatus.status !== 'subscription_pending'
           &&
@@ -164,6 +166,7 @@ function SubscriptionEditWrapper(props) {
           </Col>
         }
       </Row>
+      {finalizingError && <Row><Col className='text-danger'>{finalizingError}</Col></Row>}
     </>
   );
 }
