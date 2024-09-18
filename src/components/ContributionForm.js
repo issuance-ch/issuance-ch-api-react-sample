@@ -245,7 +245,7 @@ function ContributionForm(props) {
       {ico.has_coupons && <Row>
         <Col xs="12" className="mb-4 mb-md-0">
           <FormGroup>
-            <Label className="required" for="coupon">Coupon</Label>
+            <Label for="coupon">Coupon</Label>
             <Input type="text" id="coupon"
               placeholder="Enter a coupon code"
               invalid={ContributionStore.hasError(['coupon'])}
