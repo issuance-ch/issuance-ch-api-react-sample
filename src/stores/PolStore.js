@@ -84,4 +84,5 @@ class PolStore {
   };
 }
 
-export default new PolStore();
+const PolStoreInstance = new PolStore();
+export default PolStoreInstance;

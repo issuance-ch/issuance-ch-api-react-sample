@@ -134,25 +134,26 @@ const Contribution = {
       data
     );
   },
-  getContributionEstimation: (
+  autoGuessPrice: (
     subscriptionId,
-    data,
-    coupon,
-    simulation = true
+    currencyCode,
+    nbShares,
+    tier
   ) => {
-    if (coupon) {
-      data.coupon = coupon;
-    }
-    data.simulation = simulation;
     return requests.post(
       `/subscriptions/${subscriptionId}/share-price-estimation`,
-      data
+      {
+        currency_code: currencyCode,
+        nb_shares: nbShares,
+        tier
+      }
     );
   },
 
   checkCoupon: (icoId, couponCode) => {
     return requests.get(`/icos/${icoId}/coupon?code=${couponCode}`);
   },
+
 };
 
 const Subscriptions = {

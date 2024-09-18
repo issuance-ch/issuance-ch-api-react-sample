@@ -36,4 +36,5 @@ class CommonStore {
   }
 }
 
-export default new CommonStore();
+const CommonStoreInstance = new CommonStore();
+export default CommonStoreInstance;

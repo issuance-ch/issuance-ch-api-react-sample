@@ -358,4 +358,5 @@ class SubscriptionStore {
   }
 }
 
-export default new SubscriptionStore();
+const SubscriptionStoreInstance = new SubscriptionStore();
+export default SubscriptionStoreInstance;

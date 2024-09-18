@@ -12,6 +12,20 @@ function ContributionForm(props) {
   const formId = groupName + '_' + fieldName;
   const [modifying, setModifying] = useState(fieldData.status === 'EMPTY');
   const [pdf, setPdf] = useState(null);
+  const [tokenAmount, setTokenAmount] = useState('');
+
+  const handleTokenAmountChange = async (value, subscriptionId, currency, tier) => {
+    setTokenAmount(value);
+    return ContributionStore.getAutoGuessedPrice(subscriptionId, currency.currency_code, value, tier)
+      .then(estimationResponse => {
+        ContributionStore.setInvestment(currency, 'amount', estimationResponse.amount);
+      })
+      .catch(err => {
+        console.error(err);
+      }).finally(() => {
+        ContributionStore.getContributionEstimation(subscriptionId);
+      })
+  };
 
   async function b64toBlob(base64, type = 'application/octet-stream') {
     const res = await fetch(`data:${type};base64,${base64}`);
@@ -106,9 +120,13 @@ function ContributionForm(props) {
     }
   }
 
+  const autoGuessPrice = !!(toJS(ico).auto_guess_price);
+  const tokenName = toJS(ico).token_name || "";
+
   const cryptoCurrencies = data['tier'] && tiersList[data['tier']] && tiersList[data['tier']].currencies ? tiersList[data['tier']].currencies.crypto : [];
   const fiatCurrencies = data['tier'] && tiersList[data['tier']] && tiersList[data['tier']] && tiersList[data['tier']].currencies ? tiersList[data['tier']].currencies.fiat : [];
   const mergedCurrencies = cryptoCurrencies.concat(fiatCurrencies);
+  const tier = data['tier'];
 
   if (cryptoCurrencies.length + fiatCurrencies.length === 1) {
     // If only one currency is possible, automatically select it...
@@ -118,8 +136,10 @@ function ContributionForm(props) {
       ContributionStore.setData("currencies", currencies);
     }
   }
-  
-  ContributionStore.getContributionEstimation(subscriptionId);
+
+  if (!ContributionStore.getTotalChf()) {
+    ContributionStore.getContributionEstimation(subscriptionId);
+  }
 
   return (
     <>
@@ -139,54 +159,81 @@ function ContributionForm(props) {
       </FormGroup>
 
       {ContributionStore.getData("currencies").map((currency, index) => {
-        return <Row key={currency.id} className="justify-content-md-between align-items-md-center">
-          <Col xs="4" className="mb-4 mb-md-0">
-            <FormGroup>
-              <Label className="required" for={formId + '_amount'}>Amount</Label>
-              <Input type="text" id={formId + '_amount'}
-                required
-                value={currency.amount}
-                invalid={ContributionStore.hasError(['currencies', index, 'amount'])}
-                onChange={ev => {
-                  ContributionStore.setInvestment(currency, 'amount', ev.target.value);
-                  ContributionStore.getContributionEstimation(subscriptionId);
-                }}
-              />
-              <FieldErrors errors={errors} field={['currencies', index, 'amount']} />
-            </FormGroup>
-          </Col>
-          <Col xs="2" className="mb-4 mb-md-0">
-            <FormGroup>
-              <Label className="required" for={formId + '_currency_code'}>Currency</Label>
-              <CurrencySelect
-                id={formId + 'currency_code'}
-                value={currency.currency_code}
-                fiat={fiatCurrencies}
-                crypto={cryptoCurrencies}
-                invalid={ContributionStore.hasError(['currencies', index, 'currency_code'])}
-                onChange={ev => {
-                  ContributionStore.setInvestment(currency, 'currency_code', ev.target.value);
-                  ContributionStore.getContributionEstimation(subscriptionId);
-                }}
-              />
-              <FieldErrors errors={errors} field={['currencies', index, 'currency_code']} />
-            </FormGroup>
-          </Col>
-          <Col xs="5" className="mb-4 mb-md-0">
-            {isCrypto(toJS(ContributionStore.getData('currencies')[index].currency_code)) && <FormGroup>
-              <Label className="required" for={formId + '_address'}>Address</Label>
-              <Input type="text" id={formId + '_address'}
-                required
-                value={currency.address}
-                invalid={ContributionStore.hasError(['currencies', index, 'address'])}
-                onChange={ev => {
-                  ContributionStore.setInvestment(currency, 'address', ev.target.value);
-                }}
-              />
-              <FieldErrors errors={errors} field={['currencies', index, 'address']} />
-            </FormGroup>}
-          </Col>
-        </Row>
+        return <div key={currency.id}>
+          {autoGuessPrice &&
+            <Row className="justify-content-md-between align-items-md-center">
+              <Col className="mb-4 mb-md-0">
+
+                <FormGroup>
+                  <Label className="required" for={formId + '_tokens'}>How many <strong>{tokenName}</strong> would you like to buy?</Label>
+                  <Input type="text" id={formId + '_tokens'}
+                    required
+                    value={tokenAmount}
+                    onChange={(ev) => {
+                      handleTokenAmountChange(ev.target.value, subscriptionId, currency, tier);
+                    }} // Quand l'utilisateur entre le nombre de tokens
+                  />
+                  <FieldErrors errors={errors} field={['currencies', index, 'amount']} />
+                </FormGroup>
+              </Col>
+            </Row>
+          }
+
+          <Row className="align-items-md-start">
+            <Col>
+              <FormGroup>
+                <Label className="required" for={formId + '_amount'}>Amount</Label>
+                <Input type="text" id={formId + '_amount'}
+                  disabled={autoGuessPrice}
+                  required
+                  value={currency.amount}
+                  invalid={ContributionStore.hasError(['currencies', index, 'amount'])}
+                  onChange={ev => {
+                    ContributionStore.setInvestment(currency, 'amount', ev.target.value);
+                    ContributionStore.getContributionEstimation(subscriptionId);
+                  }}
+                />
+                <FieldErrors errors={errors} field={['currencies', index, 'amount']} />
+              </FormGroup>
+            </Col>
+
+            <Col className="mb-4 mb-md-0">
+              <FormGroup>
+                <Label className="required" for={formId + '_currency_code'}>In which currency would you pay?</Label>
+                <CurrencySelect
+                  id={formId + 'currency_code'}
+                  value={currency.currency_code}
+                  fiat={fiatCurrencies}
+                  crypto={cryptoCurrencies}
+                  invalid={ContributionStore.hasError(['currencies', index, 'currency_code'])}
+                  onChange={ev => {
+                    ContributionStore.setInvestment(currency, 'currency_code', ev.target.value);
+                    if (autoGuessPrice) {
+                      handleTokenAmountChange(tokenAmount, subscriptionId, currency, tier);
+                    } else {
+                      ContributionStore.getContributionEstimation(subscriptionId);
+                    }
+                  }}
+                />
+                <FieldErrors errors={errors} field={['currencies', index, 'currency_code']} />
+              </FormGroup>
+            </Col>
+            <Col className="mb-4 mb-md-0">
+              {isCrypto(toJS(ContributionStore.getData('currencies')[index].currency_code)) && <FormGroup>
+                <Label className="required" for={formId + '_address'}>Address</Label>
+                <Input type="text" id={formId + '_address'}
+                  required
+                  value={currency.address}
+                  invalid={ContributionStore.hasError(['currencies', index, 'address'])}
+                  onChange={ev => {
+                    ContributionStore.setInvestment(currency, 'address', ev.target.value);
+                  }}
+                />
+                <FieldErrors errors={errors} field={['currencies', index, 'address']} />
+              </FormGroup>}
+            </Col>
+          </Row>
+        </div>
       })}
 
       <Row className="justify-content-md-between align-items-md-center">
@@ -197,22 +244,22 @@ function ContributionForm(props) {
 
       {ico.has_coupons && <Row>
         <Col xs="12" className="mb-4 mb-md-0">
-            <FormGroup>
-              <Label className="required" for="coupon">Coupon</Label>
-              <Input type="text" id="coupon"
-                placeholder="Enter a coupon code"
-                invalid={ContributionStore.hasError(['coupon'])}
-                onChange={ev => {
-                  ContributionStore.checkCoupon(ico.id, ev.target.value).then(couponData => {
-                    ContributionStore.setCoupon(couponData.code)
-                    ContributionStore.getContributionEstimation(subscriptionId);
-                  }).catch(err => {})
-                }}
-              />
-              <FieldErrors errors={errors} field={"coupon"} />
-            </FormGroup>
-          </Col>
-        </Row>}
+          <FormGroup>
+            <Label className="required" for="coupon">Coupon</Label>
+            <Input type="text" id="coupon"
+              placeholder="Enter a coupon code"
+              invalid={ContributionStore.hasError(['coupon'])}
+              onChange={ev => {
+                ContributionStore.checkCoupon(ico.id, ev.target.value).then(couponData => {
+                  ContributionStore.setCoupon(couponData.code)
+                  ContributionStore.getContributionEstimation(subscriptionId);
+                }).catch(err => { })
+              }}
+            />
+            <FieldErrors errors={errors} field={"coupon"} />
+          </FormGroup>
+        </Col>
+      </Row>}
 
       {ContributionStore.getFormErrors().map((err, index) => {
         return <div className="error" key={index}>{err}</div>

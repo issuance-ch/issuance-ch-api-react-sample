@@ -3,6 +3,7 @@ import { Contribution } from "../helpers/agent";
 
 class ContributionStore {
   loadingCount = 0;
+  guessing = 0;
   totalChf = null;
 
   data = null;
@@ -14,6 +15,7 @@ class ContributionStore {
 
   constructor() {
     makeObservable(this, {
+      guessing: observable,
       loadingCount: observable,
       totalChf: observable,
       errors: observable,
@@ -24,6 +26,7 @@ class ContributionStore {
       setData: action,
       setInitialData: action,
       postContribution: action,
+      getAutoGuessedPrice: action,
     });
   }
 
@@ -145,8 +148,8 @@ class ContributionStore {
           return res;
         })
       )
-      .catch(action((err) => {}))
-      .finally(action(() => {}));
+      .catch(action((err) => { }))
+      .finally(action(() => { }));
   }
 
   /**
@@ -216,6 +219,37 @@ class ContributionStore {
         })
       );
   }
+
+  async getAutoGuessedPrice(subscriptionId, currencyCode, nbShares, tier) {
+    this.guessing++;
+    return Contribution.autoGuessPrice(subscriptionId, currencyCode, nbShares, tier)
+      .then(action((res) => res))
+      .catch(
+        action((err) => {
+          if (
+            err.response &&
+            err.response.body &&
+            err.response.status &&
+            err.response.status === 400
+          ) {
+            if (err.response.body.form) {
+              this.errors.form = err.response.body.form;
+            }
+            if (err.response.body.fields) {
+              this.errors.fields = err.response.body.fields;
+            }
+          }
+
+          throw err;
+        })
+      )
+      .finally(
+        action(() => {
+          this.guessing--;
+        })
+      );
+  }
 }
 
-export default new ContributionStore();
+const ContributionStoreInstance = new ContributionStore();
+export default ContributionStoreInstance;

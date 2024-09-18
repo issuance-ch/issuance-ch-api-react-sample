@@ -145,6 +145,7 @@ function Step1bProofOfLiveness(props) {
               </button>
             </div>
             <iframe
+              title="Proof of liveness session"
               src={polUrl}
               frameborder="0"
               allow="camera"

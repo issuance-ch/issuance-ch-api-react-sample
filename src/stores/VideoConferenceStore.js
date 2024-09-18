@@ -82,4 +82,5 @@ class VideoConferenceStore {
   }
 }
 
-export default new VideoConferenceStore();
+const VideoConferenceStoreInstance = new VideoConferenceStore();
+export default VideoConferenceStoreInstance;

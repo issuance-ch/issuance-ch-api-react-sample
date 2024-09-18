@@ -64,6 +64,8 @@ function SubscriptionNew(props) {
             icoName: ico.name
           }
           break;
+        default:
+          break;
       }
 
       // Some status are most important, making user unable to create a new subscription...

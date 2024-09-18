@@ -108,4 +108,5 @@ class Annex1Store {
   }
 }
 
-export default new Annex1Store();
+const Annex1StoreInstance = new Annex1Store();
+export default Annex1StoreInstance;

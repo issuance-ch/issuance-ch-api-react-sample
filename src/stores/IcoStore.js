@@ -112,4 +112,5 @@ class IcoStore {
   }
 }
 
-export default new IcoStore();
+const IcoStoreInstance = new IcoStore();
+export default IcoStoreInstance;

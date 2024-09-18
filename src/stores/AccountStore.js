@@ -258,4 +258,5 @@ class AccountStore {
   }
 }
 
-export default new AccountStore();
+const AccountStoreInstance = new AccountStore();
+export default AccountStoreInstance;

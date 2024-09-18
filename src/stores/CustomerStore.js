@@ -55,4 +55,5 @@ class CustomerStore {
   }
 }
 
-export default new CustomerStore();
+const CustomerStoreInstance = new CustomerStore();
+export default CustomerStoreInstance;

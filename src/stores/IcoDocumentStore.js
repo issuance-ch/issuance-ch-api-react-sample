@@ -171,4 +171,5 @@ class IcoDocumentStore {
   }
 }
 
-export default new IcoDocumentStore();
+const IcoDocumentStoreInstance = new IcoDocumentStore();
+export default IcoDocumentStoreInstance;

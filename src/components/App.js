@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route, withRouter, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { inject, observer } from "mobx-react";
 import { Container, Col, Row, Spinner } from "reactstrap";
 import Header from "./Header";

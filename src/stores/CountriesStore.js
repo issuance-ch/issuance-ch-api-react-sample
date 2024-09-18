@@ -53,4 +53,5 @@ class CountriesStore {
   }
 }
 
-export default new CountriesStore();
+const CountriesStoreInstance = new CountriesStore();
+export default CountriesStoreInstance;
