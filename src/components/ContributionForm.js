@@ -238,7 +238,8 @@ function ContributionForm(props) {
 
       <Row className="justify-content-md-between align-items-md-center">
         <Col xs="12" md={{ size: 'auto' }} className="mb-3">
-          <strong>CHF equivalent :</strong> {ContributionStore.getTotalChf()}
+          <strong>CHF equivalent :</strong> {ContributionStore.getTotalChf()}<br />
+          You must use a personal wallet. Do not send funds from an exchange. Please ensure that the address you indicate is already funded with the contribution amount.
         </Col>
       </Row>
 
