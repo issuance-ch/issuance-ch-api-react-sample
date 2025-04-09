@@ -403,6 +403,7 @@ function StepField(props) {
               data-field-name={`${groupName}.fields.${fieldName}`}
               disabled={loadState === 'loading'}
               onChange={handleFileSelect}
+              accept=".jpg,.jpeg,.png,.pdf,.xls,.xlsx,.ods,.zip,.rar"
             />
             <label className="custom-file-label" htmlFor={fieldName}>
               {
