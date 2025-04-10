@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
-import { Alert, Spinner, Table, ButtonGroup, Button } from 'reactstrap';
+import { Alert, Spinner, Table, ButtonGroup, Button, Tooltip } from 'reactstrap';
 import statusParser from '../../helpers/statusParser'
 import moment from 'moment';
 
 function SubscriptionListWrapper(props) {
   const { subscriptions, loading } = props;
   const { SubscriptionStore } = props;
-
+  const [tooltipOpen, setTooltipOpen] = React.useState(null);
+  const toggleTooltip = (id) => {
+    setTooltipOpen(prev => prev === id ? null : id);
+  };
   if (loading) {
     return (
       <Spinner color="secondary" />
@@ -37,6 +40,7 @@ function SubscriptionListWrapper(props) {
       <tbody>
         {
           subscriptions.map(subscription => {
+            const editButtonId = `edit-btn-${subscription.id}`;
             return (
               <tr key={subscription.id}>
                 <td>{subscription.ico_subscribed[0].ico.name}</td>
@@ -60,7 +64,22 @@ function SubscriptionListWrapper(props) {
                         Delete
                       </Button>
                     }
-                    <Link to={`/subscription/${subscription.id}`} className="btn btn-primary">Edit</Link>
+                    {
+                          subscription.editable ? (
+                              <Link to={`/subscription/${subscription.id}`} className="btn btn-primary" id={editButtonId}>
+                                  Edit
+                              </Link>
+                          ) : (
+                              <>
+                                  <Button disabled color="secondary" id={editButtonId}>
+                                      Edit
+                                  </Button>
+                                  <Tooltip placement="top" isOpen={tooltipOpen === editButtonId} target={editButtonId} toggle={() => toggleTooltip(editButtonId)}>
+                                      This subscription is not editable at this moment
+                                  </Tooltip>
+                              </>
+                          )
+                    }
                     {
                       subscription.status !== 'subscription_pending'
                       &&
