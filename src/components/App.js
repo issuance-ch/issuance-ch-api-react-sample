@@ -13,6 +13,7 @@ import Login from "../pages/Login";
 import Home from "../pages/Home";
 import Subscription from "../pages/Subscription";
 import Footer from "./Footer";
+import {Accounts} from "../helpers/agent";
 
 const urlParams = new URLSearchParams(window.location.search);
 const referral = urlParams.get("referral");
@@ -40,6 +41,29 @@ function App(props) {
       CommonStore.setAppLoaded();
     }
   }, [CommonStore, CustomerStore, navigate]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+        const token = CommonStore.token;
+        console.info(token);
+        if (!token) return;
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (!payload?.exp) return;
+        const expiresIn = payload.exp * 1000 - Date.now();
+        const fiveMinutes = 5 * 60 * 1000;
+        if (expiresIn < fiveMinutes) {
+            Accounts.refresh()
+                .then((data) => {
+                    if (data.token) {
+                        CommonStore.setToken(data.token);
+                    }
+                })
+                .catch(() => {
+                    // Optional: handle refresh failure silently
+                });
+        }
+    }, 30 * 1000);
+    return () => clearInterval(interval); // Clean up on unmount
+  }, [CommonStore]);
 
   if (CommonStore.appLoaded) {
     return (

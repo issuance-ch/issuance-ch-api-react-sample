@@ -250,7 +250,7 @@ class AccountStore {
   }
 
   logout() {
-    CommonStore.setToken(undefined);
+    Accounts.invalidate();
     CustomerStore.forgetCustomer();
     asyncSessionStorage.reset();
 
