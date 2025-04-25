@@ -25,7 +25,6 @@ class PolStore {
     return Pol.initUrl(subscriptionId)
       .then(
         action((response) => {
-          console.log(this);
           this.polUrl = response.idCheckUrl;
           return response;
         })
@@ -53,7 +52,6 @@ class PolStore {
         action((response) => {
           this.polError = "";
           if (response.pol_status === "declined") {
-            console.log("refuse reason", response.refuse_reason);
             if (
               response.refuse_reason?.find(
                 (el) => el.message === "used_by_someone_else"

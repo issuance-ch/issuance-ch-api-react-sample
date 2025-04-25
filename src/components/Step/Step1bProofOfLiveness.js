@@ -17,17 +17,13 @@ function Step1bProofOfLiveness(props) {
   const polStatus = toJS(fields.pol.status);
 
   const receiveMessage = async (evt) => {
-    console.log("Received_message", evt);
-    console.log("Received_message2", evt.data?.name);
 
     if (evt.data?.name === "verifyPage") {
-      console.log("Process is completed");
       stopPol();
 
       // Get pol status update, thn re-fetch subscription
       PolStore.completePol(toJS(fillStatus.subscription_id))
         .then((result) => {
-          console.log("Receive result from completePol", result);
           if (!result) {
             return;
           }

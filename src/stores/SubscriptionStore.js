@@ -127,6 +127,10 @@ class SubscriptionStore {
       .catch(
         action((err) => {
           this.finalizingError = err?.response?.body?.err_msg || "An unknown error occurred";
+          const hasFieldsError = err?.response?.body?.fields && Object.keys(err.response.body.fields).length > 0;
+          if (hasFieldsError) {
+            this.finalizingError = null;
+          }
           throw err;
         })
       )
