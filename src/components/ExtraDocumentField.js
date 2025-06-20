@@ -19,17 +19,31 @@ function ExtraDocumentField(props) {
     }
   }, [signatureData]);
 
+  useEffect(() => {
+    const wrapper = signaturePadRef.current;
+
+    const pad = wrapper && wrapper.signaturePad;
+    if (!pad) return;
+
+    const handleEndStroke = () => {
+      const svgData = pad.toDataURL('image/svg+xml');
+      const pointData = pad.toData();
+
+
+      IcoDocumentStore.setSignature(fieldId, pointData);
+      handleExtraDocumentDataChange(svgData);
+
+    };
+
+    pad.addEventListener('endStroke', handleEndStroke);
+
+    return () => {
+      pad.removeEventListener('endStroke', handleEndStroke);
+    };
+  }, [IcoDocumentStore]);
+
   function handleChangeCheckbox(ev) {
     const value = ev.target.checked;
-
-    handleExtraDocumentDataChange(value);
-  }
-
-  function handleChangeSignature() {
-    const value = signaturePadRef.current.toDataURL('image/svg+xml'); // goes to server
-    const data = signaturePadRef.current.toData(); // to store sign between component updates
-
-    IcoDocumentStore.setSignature(fieldId, data);
 
     handleExtraDocumentDataChange(value);
   }
@@ -47,7 +61,7 @@ function ExtraDocumentField(props) {
   if (field.field_privacy !== 'PRIVACY_PUBLIC') {
     return null;
   }
-  
+
   if (field.field_type === 'FIELD_TYPE_CHECKBOX') {
     return (
       <FormGroup>
@@ -72,19 +86,18 @@ function ExtraDocumentField(props) {
     return (
       <FormGroup>
         {getLabel()}
-        <div className={'wrapper-signature-pad'+ (errors && errors.fields && errors.fields[field.field_name] ?' is-invalid' : '')}>
+        <div className={'wrapper-signature-pad' + (errors && errors.fields && errors.fields[field.field_name] ? ' is-invalid' : '')}>
           <SignaturePad
-            options={{onEnd: handleChangeSignature}}
             ref={signaturePadRef}
             height={350}
           />
         </div>
 
         <Row className="justify-content-md-between align-items-md-center">
-          <Col xs="12" md={{size: 'auto'}}>
+          <Col xs="12" md={{ size: 'auto' }}>
             <FieldErrors errors={errors} field={field.field_name} />
           </Col>
-          <Col xs="12" md={{size: 'auto'}}>
+          <Col xs="12" md={{ size: 'auto' }}>
             <Button
               className="w-100"
               color="warning"

@@ -16,12 +16,35 @@ function Annex2Form(props) {
   const signaturePadRef = useRef(null);
 
   useEffect(() => {
-    if (signaturePadRef.current && signatureData) {
-      signaturePadRef.current.fromData(signatureData);
-    } else if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
+    if (signaturePadRef.current) {
+      if (signatureData) {
+        signaturePadRef.current.fromData(signatureData);
+      } else {
+        signaturePadRef.current.clear();
+      }
     }
-  });
+  }, [signatureData]);
+
+  useEffect(() => {
+    const wrapper = signaturePadRef.current;
+
+    const pad = wrapper && wrapper.signaturePad;
+    if (!pad) return;
+
+    const handleEndStroke = () => {
+      const svgData = pad.toDataURL('image/svg+xml');
+      const pointData = pad.toData();
+      Annex2Store.setData('sign', svgData);
+      Annex2Store.setSignatureData(pointData);
+
+    };
+
+    pad.addEventListener('endStroke', handleEndStroke);
+
+    return () => {
+      pad.removeEventListener('endStroke', handleEndStroke);
+    };
+  }, [Annex2Store]);
 
   useEffect(() => {
     asyncSessionStorage
@@ -41,7 +64,7 @@ function Annex2Form(props) {
           data.people[0].nationality = sessionData.nationality;
         }
       })
-    ;
+      ;
   }, [data, subscriptionId]);
 
   async function b64toBlob(base64, type = 'application/octet-stream') {
@@ -211,7 +234,7 @@ function Annex2Form(props) {
                     data.people[length - 1].nationality = sessionData.nationality;
                   }
                 })
-              ;
+                ;
             }}
           >
             Add another

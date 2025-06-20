@@ -72,7 +72,6 @@ class Annex1Store {
 
   postAnnex1(subscriptionId) {
     this.loadingCount++;
-
     return Annexes.postAnnex1(subscriptionId, this.data)
       .then(
         action((res) => {

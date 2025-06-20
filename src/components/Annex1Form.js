@@ -15,12 +15,16 @@ function Annex1Form(props) {
   const signaturePadRef = useRef(null);
 
   useEffect(() => {
-    if (signaturePadRef.current && signatureData) {
-      signaturePadRef.current.fromData(signatureData);
-    } else if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
+    if (signaturePadRef.current) {
+      if (signatureData) {
+        signaturePadRef.current.fromData(signatureData);
+      } else {
+        signaturePadRef.current.clear();
+      }
     }
-  });
+  }, [signatureData]);
+
+
 
   useEffect(() => {
     asyncSessionStorage
@@ -47,6 +51,29 @@ function Annex1Form(props) {
       })
       ;
   }, [data, subscriptionId]);
+
+
+  useEffect(() => {
+    const wrapper = signaturePadRef.current;
+
+    const pad = wrapper && wrapper.signaturePad;
+    if (!pad) return;
+
+    const handleEndStroke = () => {
+      const svgData = pad.toDataURL('image/svg+xml');
+      const pointData = pad.toData();
+      Annex1Store.setData('sign', svgData);
+      Annex1Store.setSignatureData(pointData);
+
+    };
+
+    pad.addEventListener('endStroke', handleEndStroke);
+
+    return () => {
+      pad.removeEventListener('endStroke', handleEndStroke);
+    };
+  }, [Annex1Store]);
+
 
   async function b64toBlob(base64, type = 'application/octet-stream') {
     const res = await fetch(`data:${type};base64,${base64}`);
@@ -148,15 +175,6 @@ function Annex1Form(props) {
         <Label className="required">Signature of the counterparty</Label>
         <div className={'wrapper-signature-pad' + (Annex1Store.hasError('sign') ? ' is-invalid' : '')}>
           <SignaturePad
-            options={{
-              onEnd: () => {
-                const dataIRL = signaturePadRef.current.toDataURL('image/svg+xml'); // goes to server
-                const data = signaturePadRef.current.toData(); // to store sign between component updates
-
-                Annex1Store.setData('sign', dataIRL);
-                Annex1Store.setSignatureData(data);
-              }
-            }}
             ref={signaturePadRef}
             height={350}
           />
