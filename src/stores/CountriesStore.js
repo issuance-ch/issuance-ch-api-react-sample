@@ -25,7 +25,7 @@ class CountriesStore {
 
   loadCountries({ acceptCached = true } = {}) {
     if (acceptCached) {
-      if (this.countriesRegistry !== undefined) {
+      if (this.countriesRegistry?.length) {
         return Promise.resolve(this.countriesRegistry);
       }
     }
