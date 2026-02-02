@@ -98,6 +98,11 @@ function Step1bProofOfLiveness(props) {
       considerAsForm
       {...otherProps}
     >
+      {identificationAfterPayment && !isPaymentConfirmed ? (
+        <Alert color="info">
+          You will be able to continue the process once our team has confirmed the reception of your payments, this may take a few days.
+        </Alert>
+      ) : (
       <>
         {toJS(fillStatus.groups.basics.fields.subscribed_as.value) ===
           "individual" ? (
@@ -173,6 +178,7 @@ function Step1bProofOfLiveness(props) {
           {polStatus === "EMPTY" && !polError && display.btns.start}
         </Button>}
       </>
+      )}
     </CollapsibleCard>
   );
 }

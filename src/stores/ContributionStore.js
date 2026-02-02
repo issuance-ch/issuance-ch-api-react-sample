@@ -12,6 +12,7 @@ class ContributionStore {
 
   currencyId = 1;
   coupon = "";
+  sharePriceEstimation = null;
 
   constructor() {
     makeObservable(this, {
@@ -21,12 +22,14 @@ class ContributionStore {
       errors: observable,
       data: observable,
       signatureData: observable,
+      sharePriceEstimation: observable,
       loading: computed,
       reset: action,
       setData: action,
       setInitialData: action,
       postContribution: action,
       getAutoGuessedPrice: action,
+      fetchSharePriceEstimation: action,
     });
   }
 
@@ -218,6 +221,50 @@ class ContributionStore {
           this.loadingCount--;
         })
       );
+  }
+
+  /**
+   * Fetch the share price estimation for a given number of tokens.
+   * The API returns the matching tier and all compatible currencies with their amounts.
+   * @param {string} subscriptionId - The subscription ID.
+   * @param {number|string} nbShares - The number of tokens requested.
+   * @returns {Promise} Resolves with the estimation data.
+   */
+  async fetchSharePriceEstimation(subscriptionId, nbShares) {
+    this.guessing++;
+    return Contribution.sharePriceEstimation(subscriptionId, nbShares)
+      .then(action((res) => {
+        this.sharePriceEstimation = res;
+        return res;
+      }))
+      .catch(action((err) => {
+        this.sharePriceEstimation = null;
+        if (err.response && err.response.body && err.response.status === 400) {
+          if (err.response.body.form) {
+            this.errors.form = err.response.body.form;
+          }
+          if (err.response.body.fields) {
+            this.errors.fields = err.response.body.fields;
+          }
+        }
+        throw err;
+      }))
+      .finally(action(() => {
+        this.guessing--;
+      }));
+  }
+
+  /**
+   * Get the amount for a specific currency from the last share price estimation.
+   * @param {string} currencyCode - The currency code to look up.
+   * @returns {string|null} The amount for that currency, or null if not found.
+   */
+  getEstimatedAmountForCurrency(currencyCode) {
+    if (!this.sharePriceEstimation || !this.sharePriceEstimation.currencies) return null;
+    const entry = this.sharePriceEstimation.currencies.find(
+      (c) => c.currency && c.currency.code === currencyCode
+    );
+    return entry ? entry.amount : null;
   }
 
   async getAutoGuessedPrice(subscriptionId, currencyCode, nbShares, tier) {

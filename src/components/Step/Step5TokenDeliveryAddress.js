@@ -24,6 +24,11 @@ function Step5TokenDeliveryAddress(props) {
       header="Token delivery address"
       {...otherProps}
     >
+      {identificationAfterPayment && !isPaymentConfirmed ? (
+        <Alert color="info">
+          You will be able to continue the process once our team has confirmed the reception of your payments, this may take a few days.
+        </Alert>
+      ) : (
       <>
         <StepField
           groupName={groupName}
@@ -42,6 +47,7 @@ function Step5TokenDeliveryAddress(props) {
           }
         </Button>
       </>
+      )}
     </CollapsibleCard>
   );
 }

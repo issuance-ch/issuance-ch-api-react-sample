@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
-import { Alert, Badge, Card, CardBody, CardHeader, Media, Spinner, Row, Col, Button } from 'reactstrap';
+import { Alert, Badge, Card, CardBody, CardHeader, Media, Spinner, Row, Col, Button, Tooltip } from 'reactstrap';
 import statusParser from '../../helpers/statusParser'
-import paymentStatusParser from '../../helpers/paymentStatusParser'
+import paymentStatusParser, { isPaymentFilled, areAllPaymentsFilled, areAllPaymentsConfirmed } from '../../helpers/paymentStatusParser'
 import IcoLogo from '../IcoLogo';
 import Step1RegisterAs from '../Step/Step1RegisterAs';
 import Step1bProofOfLiveness from '../Step/Step1bProofOfLiveness';
@@ -18,6 +18,8 @@ import Step4Fiat from '../Step/Step4Fiat';
 import Step5TokenDeliveryAddress from '../Step/Step5TokenDeliveryAddress';
 import Step6VideoConference from '../Step/Step6VideoConference';
 import GlobalErrors from '../GlobalErrors';
+import CollapsibleCard from '../CollapsibleCard';
+import PaymentStatusForm from '../PaymentStatusForm';
 import moment from 'moment';
 import CustomInput from 'reactstrap/lib/CustomInput';
 
@@ -28,14 +30,14 @@ function SubscriptionEditWrapper(props) {
   const [stepOpen, setStepOpen] = useState();
   const [shown, setShown] = useState();
   const [successMessage, setSuccessMessage] = useState();
+  const [finalizeTooltipOpen, setFinalizeTooltipOpen] = useState(false);
 
   const identificationAfterPayment = subscription?.ico_subscribed?.[0]?.ico?.identification_after_payment;
 
-  const isPaymentConfirmed = Array.isArray(fillStatus?.payment_status)
-    && fillStatus.payment_status.length > 0
-    && fillStatus.payment_status.every(
-      p => p.payment_status === 'status.received' || p.payment_status === 'status.cleared' || p.payment_status === 'status.reconciled'
-    );
+  const isContributionCompleted = fillStatus?.groups?.finalization?.fields?.contribution?.status === 'FILLED';
+
+  const isPaymentStatusFilled = areAllPaymentsFilled(fillStatus?.payment_status);
+  const isPaymentConfirmed = areAllPaymentsConfirmed(fillStatus?.payment_status);
 
   const stepComponents = [
     Step1RegisterAs,
@@ -128,14 +130,42 @@ function SubscriptionEditWrapper(props) {
           />)
         }
 
-        {identificationAfterPayment && (
+        {identificationAfterPayment && (() => {
+          const paymentFields = {};
+          if (isContributionCompleted && Array.isArray(fillStatus.payment_status)) {
+            fillStatus.payment_status.forEach((p, i) => {
+              paymentFields[`payment_${i}`] = {
+                required: true,
+                hidden: false,
+                status: isPaymentFilled(p.payment_status) ? 'FILLED' : 'EMPTY',
+              };
+            });
+          }
+          return (
+            <CollapsibleCard
+              name="payment_status"
+              header="Payment status"
+              active={isContributionCompleted}
+              fields={isContributionCompleted ? paymentFields : null}
+              considerAsForm
+              stepOpen={stepOpen}
+              setStepOpen={setStepOpen}
+              shown={shown}
+              setShown={setShown}
+            >
+              <PaymentStatusForm subscription={subscription} idPrefix="edit_" />
+            </CollapsibleCard>
+          );
+        })()}
+
+        {identificationAfterPayment && isPaymentStatusFilled && (
           <Card className={`mt-3 mb-2 ${isPaymentConfirmed ? 'border-primary' : 'border-secondary is-not-active after-payment-section'}`}>
             <CardHeader className={`d-flex justify-content-between align-items-start ${isPaymentConfirmed ? 'bg-primary text-white' : 'bg-secondary text-white'}`}>
               <div>
                 <strong>Steps after payment reception</strong>
                 {!isPaymentConfirmed && (
                   <div className="small mt-1" style={{ fontWeight: 'normal' }}>
-                    Waiting for payment confirmation
+                    You will be able to continue the process once our team has confirmed the reception of your payments, this may take a few days.
                   </div>
                 )}
               </div>
@@ -177,45 +207,60 @@ function SubscriptionEditWrapper(props) {
 
       <Row className="justify-content-md-between align-items-md-end mb-4">
         <Col className="col-12 col-md-6">
-          <CustomInput type="checkbox" id={'terms'}
-            required={true}
-            className="required"
-            label="I have read the terms and conditions"
-            checked={terms}
-            onChange={(ev) => {
-              SubscriptionStore.setTerms(ev.target.checked);
-            }}
-            invalid={false}
-          >
-            <span className="required"></span>
-          </CustomInput>
+          {!(identificationAfterPayment && !isPaymentConfirmed) && (
+            <CustomInput type="checkbox" id={'terms'}
+              required={true}
+              className="required"
+              label="I have read the terms and conditions"
+              checked={terms}
+              onChange={(ev) => {
+                SubscriptionStore.setTerms(ev.target.checked);
+              }}
+              invalid={false}
+            >
+              <span className="required"></span>
+            </CustomInput>
+          )}
 
-          <Button
-            className={`w-100 mt-5 ${finalizing ? "loading" : ''}`}
-            color="primary"
-            disabled={finalizing}
-            onClick={() => {
-              setSuccessMessage(null);
-              // setGlobalErrors(null);
-              SubscriptionStore.setGlobalErrors(null);
-              SubscriptionStore.finalize(subscription.id, terms)
-                .then(res => {
-                  SubscriptionStore.setFillStatus(res);
-                  setSuccessMessage("Thanks for your submission. You will be updated soon.");
-                })
-                .catch(err => {
-                  SubscriptionStore.setGlobalErrors(err.response ? err.response.body : "Unknown error occurred. Please try again or contact us.");
-                });
-            }}
-          >
-            {finalizing ? 'Submission in progress...' : 'Finalize my KYC'}
-          </Button>
+          <div id="finalize-btn-wrapper" className="d-inline-block w-100 mt-5">
+            <Button
+              className={`w-100 ${finalizing ? "loading" : ''}`}
+              color="primary"
+              disabled={finalizing || (identificationAfterPayment && !isPaymentConfirmed)}
+              style={(identificationAfterPayment && !isPaymentConfirmed) ? { pointerEvents: 'none' } : {}}
+              onClick={() => {
+                setSuccessMessage(null);
+                SubscriptionStore.setGlobalErrors(null);
+                SubscriptionStore.finalize(subscription.id, terms)
+                  .then(res => {
+                    SubscriptionStore.setFillStatus(res);
+                    setSuccessMessage("Thanks for your submission. You will be updated soon.");
+                  })
+                  .catch(err => {
+                    SubscriptionStore.setGlobalErrors(err.response ? err.response.body : "Unknown error occurred. Please try again or contact us.");
+                  });
+              }}
+            >
+              {finalizing ? 'Submission in progress...' : 'Finalize my KYC'}
+            </Button>
+          </div>
+          {identificationAfterPayment && !isPaymentConfirmed && (
+            <Tooltip
+              placement="top"
+              isOpen={finalizeTooltipOpen}
+              target="finalize-btn-wrapper"
+              toggle={() => setFinalizeTooltipOpen(prev => !prev)}
+            >
+              Toutes les étapes doivent être complétées (y compris le Proof of Liveness et le Token Delivery Address) avant de pouvoir finaliser votre souscription.
+            </Tooltip>
+          )}
 
         </Col>
 
 
         {
           fillStatus.status !== 'subscription_pending'
+          && !identificationAfterPayment
           &&
           <Col className="col-12 col-md-6 mt-3 mt-md-0">
             <Link to={`/subscription/payment-status/${subscription.id}`} className="btn btn-outline-success w-100">Go to payment status page</Link>

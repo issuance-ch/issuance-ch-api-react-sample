@@ -161,6 +161,12 @@ const Contribution = {
       }
     );
   },
+  sharePriceEstimation: (subscriptionId, nbShares) => {
+    return requests.post(
+      `/subscriptions/${subscriptionId}/share-price-estimation`,
+      { nb_shares: nbShares }
+    );
+  },
 
   checkCoupon: (icoId, couponCode) => {
     return requests.get(`/icos/${icoId}/coupon?code=${couponCode}`);
