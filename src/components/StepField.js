@@ -322,7 +322,7 @@ function StepField(props) {
                 className={fieldData.required ? 'required' : ''}
                 required={fieldData.required}
                 optionValue="alpha_code2"
-                optionLabel="nationality"
+                optionLabel={groupName === "company" ? "short_name" : "nationality"}
                 invalid={hasError}
                 onChange={handleChange}
               />

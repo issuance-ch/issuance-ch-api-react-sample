@@ -32,7 +32,7 @@ function CountriesSelect(props) {
     >
       <option value="">Select one</option>
       {
-        countries.map(country =>
+        [...countries].sort((a, b) => (a[optionLabel] || '').localeCompare(b[optionLabel] || '')).map(country =>
           <option
             key={country.id}
             value={country[optionValue]}
