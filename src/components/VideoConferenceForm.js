@@ -82,8 +82,10 @@ function VideoConferenceForm(props) {
                             });
                         }}
                       >
-                        GVA - {moment(slot.date).tz("Europe/Zurich").format('HH:mm')}<br />
-                        LOC - {moment(slot.date).tz(moment.tz.guess()).format('HH:mm')}
+                        <small className="d-block font-weight-bold text-uppercase" style={{ fontSize: '0.65em' }}>Swiss time</small>
+                        {moment(slot.date).tz("Europe/Zurich").format('HH:mm')}
+                        <small className="d-block font-weight-bold text-uppercase mt-1" style={{ fontSize: '0.65em' }}>Local time</small>
+                        {moment(slot.date).tz(moment.tz.guess()).format('HH:mm')}
                       </ListGroupItem>
                     }
                     )
