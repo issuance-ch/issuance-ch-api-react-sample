@@ -36,9 +36,8 @@ function SubscriptionPaymentStatusWrapper(props) {
         currency: subscription.ico_subscribed[0].investment.fiat.currency,
         init_status: subscription.ico_subscribed[0].investment.fiat.payment,
         status: subscription.ico_subscribed[0].investment.fiat.payment,
-        label: '',
-        init_label_status: subscription.ico_subscribed[0].investment.fiat.payment_label ? 'FILLED' : 'EMPTY',
-        label_status: subscription.ico_subscribed[0].investment.fiat.payment_label ? 'FILLED' : 'EMPTY'
+        init_label: subscription.ico_subscribed[0].investment.fiat.payment_label || '',
+        label: subscription.ico_subscribed[0].investment.fiat.payment_label || ''
       };
     }
 
@@ -50,9 +49,8 @@ function SubscriptionPaymentStatusWrapper(props) {
             currency: crypto.currency.value,
             init_status: crypto.payment,
             status: crypto.payment,
-            label: '',
-            init_label_status: crypto.payment_label ? 'FILLED' : 'EMPTY',
-            label_status: crypto.payment_label ? 'FILLED' : 'EMPTY'
+            init_label: crypto.payment_label || '',
+            label: crypto.payment_label || ''
           };
         })
         .reduce((val, item) => { val[item.currency] = { ...item }; return val; }, {})
@@ -79,7 +77,7 @@ function SubscriptionPaymentStatusWrapper(props) {
         fiatData['payment_status'] = formData.fiat.status;
       }
 
-      if (formData.fiat.label !== '') {
+      if (formData.fiat.label !== formData.fiat.init_label) {
         fiatData['payment_label'] = formData.fiat.label;
         fiatData['payment_status'] = formData.fiat.status;
       }
@@ -100,7 +98,7 @@ function SubscriptionPaymentStatusWrapper(props) {
           cryptoData['payment_status'] = formData.crypto[cryptoCurrency].status;
         }
 
-        if (formData.crypto[cryptoCurrency].label !== '') {
+        if (formData.crypto[cryptoCurrency].label !== formData.crypto[cryptoCurrency].init_label) {
           cryptoData['payment_label'] = formData.crypto[cryptoCurrency].label;
           cryptoData['payment_status'] = formData.crypto[cryptoCurrency].status;
         }
@@ -192,46 +190,14 @@ function SubscriptionPaymentStatusWrapper(props) {
             </FormGroup>
 
             <FormGroup>
-              <Label for={`payment_label_${formData.fiat.currency}`}>Reference used for the transfer</Label>
-              {
-                formData.fiat.label_status === 'FILLED'
-                &&
-                <InputGroup className="crypted">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText
-                      className={`status-${formData.fiat.label_status}`}
-                      onClick={ev => { updateFormData('fiat', formData.fiat.currency, 'label_status', 'MODIFIED') }}
-                    >
-                      {formData.fiat.label_status} (click to change)
-                    </InputGroupText>
-                  </InputGroupAddon>
-                </InputGroup>
-              }
-              {
-                formData.fiat.label_status !== 'FILLED'
-                &&
-                <InputGroup>
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText
-                      className="pointer"
-                      onClick={ev => {
-                        updateFormData('fiat', formData.fiat.currency, 'label', '');
-                        updateFormData('fiat', formData.fiat.currency, 'label_status', formData.fiat.init_label_status);
-                      }}
-                    >
-                      Reset
-                    </InputGroupText>
-                  </InputGroupAddon>
-
-                  <Input
-                    type="text"
-                    name={`payment_label_${formData.fiat.currency}`}
-                    id={`payment_label_${formData.fiat.currency}`}
-                    value={formData.fiat.label}
-                    onChange={ev => { updateFormData('fiat', formData.fiat.currency, 'label', ev.target.value) }}
-                  />
-                </InputGroup>
-              }
+              <Label for={`payment_label_${formData.fiat.currency}`}>Reference used for the transfer (update if different)</Label>
+              <Input
+                type="text"
+                name={`payment_label_${formData.fiat.currency}`}
+                id={`payment_label_${formData.fiat.currency}`}
+                value={formData.fiat.label}
+                onChange={ev => { updateFormData('fiat', formData.fiat.currency, 'label', ev.target.value) }}
+              />
             </FormGroup>
           </Col>
         </Row>
@@ -256,45 +222,13 @@ function SubscriptionPaymentStatusWrapper(props) {
 
               <FormGroup>
                 <Label for={`payment_label_${cryptoCurrency}`}>TXID (transaction ID on the blockchain)</Label>
-                {
-                  (formData.crypto[cryptoCurrency].label_status === 'FILLED')
-                  &&
-                  <InputGroup className="crypted">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText
-                        className={`status-${formData.crypto[cryptoCurrency].label_status}`}
-                        onClick={ev => { updateFormData('crypto', cryptoCurrency, 'label_status', 'MODIFIED') }}
-                      >
-                        {formData.crypto[cryptoCurrency].label_status} (click to change)
-                      </InputGroupText>
-                    </InputGroupAddon>
-                  </InputGroup>
-                }
-                {
-                  formData.crypto[cryptoCurrency].label_status !== 'FILLED'
-                  &&
-                  <InputGroup>
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText
-                        className="pointer"
-                        onClick={ev => {
-                          updateFormData('crypto', cryptoCurrency, 'label', '');
-                          updateFormData('crypto', cryptoCurrency, 'label_status', formData.crypto[cryptoCurrency].init_label_status);
-                        }}
-                      >
-                        Reset
-                      </InputGroupText>
-                    </InputGroupAddon>
-
-                    <Input
-                      type="text"
-                      name={`payment_label_${cryptoCurrency}`}
-                      id={`payment_label_${cryptoCurrency}`}
-                      value={formData.crypto[cryptoCurrency].label}
-                      onChange={ev => { updateFormData('crypto', cryptoCurrency, 'label', ev.target.value) }}
-                    />
-                  </InputGroup>
-                }
+                <Input
+                  type="text"
+                  name={`payment_label_${cryptoCurrency}`}
+                  id={`payment_label_${cryptoCurrency}`}
+                  value={formData.crypto[cryptoCurrency].label}
+                  onChange={ev => { updateFormData('crypto', cryptoCurrency, 'label', ev.target.value) }}
+                />
               </FormGroup>
             </Col>
           </Row>

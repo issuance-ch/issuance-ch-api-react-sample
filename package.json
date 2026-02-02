@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "bootstrap": "^4.3.1",
     "formik": "^2.4.6",
     "mobx": "^6.12.3",
     "mobx-react": "^9.1.1",
@@ -15,10 +16,10 @@
     "react-router-dom": "^6.23.1",
     "react-scripts": "^5.0.1",
     "react-signature-pad-wrapper": "^3.4.0",
+    "reactstrap": "^8.1.1",
+    "sass": "^1.97.3",
     "superagent": "^9.0.2",
-    "yup": "^1.4.0",
-    "bootstrap": "^4.3.1",
-    "reactstrap": "^8.1.1"
+    "yup": "^1.4.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -40,8 +41,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "node-sass": "^7.0.3"
   }
 }

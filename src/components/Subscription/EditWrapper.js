@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
-import { Alert, Media, Spinner, Row, Col, Button } from 'reactstrap';
+import { Alert, Badge, Card, CardBody, CardHeader, Media, Spinner, Row, Col, Button } from 'reactstrap';
 import statusParser from '../../helpers/statusParser'
+import paymentStatusParser from '../../helpers/paymentStatusParser'
 import IcoLogo from '../IcoLogo';
 import Step1RegisterAs from '../Step/Step1RegisterAs';
 import Step1bProofOfLiveness from '../Step/Step1bProofOfLiveness';
@@ -28,9 +29,17 @@ function SubscriptionEditWrapper(props) {
   const [shown, setShown] = useState();
   const [successMessage, setSuccessMessage] = useState();
 
+  const identificationAfterPayment = subscription?.ico_subscribed?.[0]?.ico?.identification_after_payment;
+
+  const isPaymentConfirmed = Array.isArray(fillStatus?.payment_status)
+    && fillStatus.payment_status.length > 0
+    && fillStatus.payment_status.every(
+      p => p.payment_status === 'status.received' || p.payment_status === 'status.cleared' || p.payment_status === 'status.reconciled'
+    );
+
   const stepComponents = [
     Step1RegisterAs,
-    Step1bProofOfLiveness,
+    ...(identificationAfterPayment ? [] : [Step1bProofOfLiveness]),
     Step2Individual,
     Step2Company,
     Step2Annex1,
@@ -39,9 +48,11 @@ function SubscriptionEditWrapper(props) {
     Step3Contribution,
     Step4Crypto,
     Step4Fiat,
-    Step5TokenDeliveryAddress,
+    ...(identificationAfterPayment ? [] : [Step5TokenDeliveryAddress]),
     Step6VideoConference,
   ];
+
+  const afterPaymentSteps = [Step1bProofOfLiveness, Step5TokenDeliveryAddress];
 
   if (loading) {
     return (
@@ -112,8 +123,53 @@ function SubscriptionEditWrapper(props) {
             shown={shown}
             setShown={setShown}
             ico={subscription.ico_subscribed[0].ico}
+            identificationAfterPayment={identificationAfterPayment}
+            isPaymentConfirmed={isPaymentConfirmed}
           />)
         }
+
+        {identificationAfterPayment && (
+          <Card className={`mt-3 mb-2 ${isPaymentConfirmed ? 'border-primary' : 'border-secondary is-not-active after-payment-section'}`}>
+            <CardHeader className={`d-flex justify-content-between align-items-start ${isPaymentConfirmed ? 'bg-primary text-white' : 'bg-secondary text-white'}`}>
+              <div>
+                <strong>Steps after payment reception</strong>
+                {!isPaymentConfirmed && (
+                  <div className="small mt-1" style={{ fontWeight: 'normal' }}>
+                    Waiting for payment confirmation
+                  </div>
+                )}
+              </div>
+              {Array.isArray(fillStatus.payment_status) && fillStatus.payment_status.length > 0 && (
+                <div className="d-flex flex-wrap justify-content-end" style={{ gap: '0.25rem' }}>
+                  {fillStatus.payment_status.map((p, i) => {
+                    const parsed = paymentStatusParser(p.payment_status);
+                    return (
+                      <Badge key={i} color={parsed.color}>
+                        {p.currency && <span>{p.currency}: </span>}
+                        {parsed.label}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+            </CardHeader>
+            <CardBody>
+              {afterPaymentSteps.map((Component, index) =>
+                <Component key={`after-payment-${index}`}
+                  subscription={subscription}
+                  fillStatus={fillStatus}
+                  stepOpen={stepOpen}
+                  setStepOpen={setStepOpen}
+                  shown={shown}
+                  setShown={setShown}
+                  ico={subscription.ico_subscribed[0].ico}
+                  identificationAfterPayment={identificationAfterPayment}
+                  isPaymentConfirmed={isPaymentConfirmed}
+                />)
+              }
+            </CardBody>
+          </Card>
+        )}
       </div>
 
       <GlobalErrors errors={globalErrors}></GlobalErrors>

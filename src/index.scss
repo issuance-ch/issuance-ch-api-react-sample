@@ -136,6 +136,10 @@ label.required:after {
   &.current {
     background-color: rgba(0, 255, 0, 0.2);
   }
+
+  &.after-payment-section {
+    opacity: 0.5;
+  }
 }
 
 .invalid-feedback,

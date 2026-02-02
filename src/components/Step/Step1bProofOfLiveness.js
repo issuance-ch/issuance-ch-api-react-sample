@@ -1,13 +1,13 @@
 import React from "react";
 import { inject, observer } from "mobx-react";
-import { Button, Spinner } from "reactstrap";
+import { Alert, Button, Spinner } from "reactstrap";
 import CollapsibleCard from "../CollapsibleCard";
 import { toJS } from "mobx";
 
 function Step1bProofOfLiveness(props) {
   const groupName = "pol";
   const fieldName = "pol";
-  const { PolStore, SubscriptionStore, fillStatus, ...otherProps } = props;
+  const { PolStore, SubscriptionStore, fillStatus, identificationAfterPayment, isPaymentConfirmed, ...otherProps } = props;
   const { loadingPol, polError, initPolUrl, polUrl, stopPol } = PolStore;
   const { loading: loadingSubscriptions } = SubscriptionStore;
 
@@ -98,79 +98,81 @@ function Step1bProofOfLiveness(props) {
       considerAsForm
       {...otherProps}
     >
-      {toJS(fillStatus.groups.basics.fields.subscribed_as.value) ===
-        "individual" ? (
-        <>
-          <p>We use an automated identity checking process.</p>
-          <p>
-            The self onboarding requires you to undergo proof of liveness
-            process.
-          </p>
-          <p>
-            Uploading an ID document containing an MRZ (passport or ID card)
-            ensures the fastest on boarding. Any other documents will require
-            our KYC officers to look into your application on a case by case,
-            and might be refused.
-          </p>
-          <p>
-            Do not worry if this one fails, a compliance officer will get back
-            to you to resolve it.
-          </p>
-        </>
-      ) : (
-        <>
-          <p>Please upload the identifications documents of the signatory.</p>
-          <p>
-            Uploading an ID document containing an MRZ (passport or ID card)
-            ensures the fastest on boarding. Any other documents will require
-            our KYC officers to look into your application on a case by case,
-            and might be refused.
-          </p>
-          <p>
-            Do not worry if this one fails, a compliance officer will get back
-            to you to resolve it.
-          </p>
-        </>
-      )}
-      {polUrl && (
-        <div class="full-screen-overlay">
-          <div className="full-screen-content">
-            <div class="close-iframe">
-              <button class="btn btn-close" onClick={cancelPol}>
-                &times; Cancel
-              </button>
+      <>
+        {toJS(fillStatus.groups.basics.fields.subscribed_as.value) ===
+          "individual" ? (
+          <>
+            <p>We use an automated identity checking process.</p>
+            <p>
+              The self onboarding requires you to undergo proof of liveness
+              process.
+            </p>
+            <p>
+              Uploading an ID document containing an MRZ (passport or ID card)
+              ensures the fastest on boarding. Any other documents will require
+              our KYC officers to look into your application on a case by case,
+              and might be refused.
+            </p>
+            <p>
+              Do not worry if this one fails, a compliance officer will get back
+              to you to resolve it.
+            </p>
+          </>
+        ) : (
+          <>
+            <p>Please upload the identifications documents of the signatory.</p>
+            <p>
+              Uploading an ID document containing an MRZ (passport or ID card)
+              ensures the fastest on boarding. Any other documents will require
+              our KYC officers to look into your application on a case by case,
+              and might be refused.
+            </p>
+            <p>
+              Do not worry if this one fails, a compliance officer will get back
+              to you to resolve it.
+            </p>
+          </>
+        )}
+        {polUrl && (
+          <div class="full-screen-overlay">
+            <div className="full-screen-content">
+              <div class="close-iframe">
+                <button class="btn btn-close" onClick={cancelPol}>
+                  &times; Cancel
+                </button>
+              </div>
+              <iframe
+                title="Proof of liveness session"
+                src={polUrl}
+                frameborder="0"
+                allow="camera"
+                class="full-screen bg-white"
+                allowFullScreen
+              ></iframe>
             </div>
-            <iframe
-              title="Proof of liveness session"
-              src={polUrl}
-              frameborder="0"
-              allow="camera"
-              class="full-screen bg-white"
-              allowFullScreen
-            ></iframe>
           </div>
-        </div>
-      )}
+        )}
 
-      {polStatus === "REFUSED" && (
-        <div className="alert alert-danger">
-          {polError || display.msg.refused}
-        </div>
-      )}
-      {polStatus === "ACCEPTED" && (
-        <div className="alert alert-success">{display.msg.accepted}</div>
-      )}
-      {polStatus === "FILLED" && (
-        <div className="alert alert-info">{display.msg.filled}</div>
-      )}
+        {polStatus === "REFUSED" && (
+          <div className="alert alert-danger">
+            {polError || display.msg.refused}
+          </div>
+        )}
+        {polStatus === "ACCEPTED" && (
+          <div className="alert alert-success">{display.msg.accepted}</div>
+        )}
+        {polStatus === "FILLED" && (
+          <div className="alert alert-info">{display.msg.filled}</div>
+        )}
 
-      {polStatus !== "ACCEPTED" && <Button color="primary" onClick={() => startPol()}>
-        {(polStatus === "REFUSED" || polError) && display.btns.retry}
-        {(polStatus === "FILLED") &&
-          !polError &&
-          display.btns.update}
-        {polStatus === "EMPTY" && !polError && display.btns.start}
-      </Button>}
+        {polStatus !== "ACCEPTED" && <Button color="primary" onClick={() => startPol()}>
+          {(polStatus === "REFUSED" || polError) && display.btns.retry}
+          {(polStatus === "FILLED") &&
+            !polError &&
+            display.btns.update}
+          {polStatus === "EMPTY" && !polError && display.btns.start}
+        </Button>}
+      </>
     </CollapsibleCard>
   );
 }
