@@ -171,11 +171,11 @@ function Step1bProofOfLiveness(props) {
         )}
 
         {polStatus !== "ACCEPTED" && <Button color="primary" onClick={() => startPol()}>
-          {(polStatus === "REFUSED" || polError) && display.btns.retry}
-          {(polStatus === "FILLED") &&
-            !polError &&
-            display.btns.update}
-          {polStatus === "EMPTY" && !polError && display.btns.start}
+          {(polStatus === "REFUSED" || polError)
+            ? display.btns.retry
+            : polStatus === "FILLED"
+              ? display.btns.update
+              : display.btns.start}
         </Button>}
       </>
       )}
