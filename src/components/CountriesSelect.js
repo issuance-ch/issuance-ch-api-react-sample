@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { inject, observer } from 'mobx-react';
-import { Input, CustomInput, Spinner } from 'reactstrap';
+import { Input, Spinner } from 'reactstrap';
+import Select from './Select';
 
 function CountriesSelect(props) {
   const { CountriesStore, optionValue = 'alpha_code2', optionLabel = 'short_name', ...formProps } = props;
@@ -10,9 +11,16 @@ function CountriesSelect(props) {
     CountriesStore.loadCountries();
   }, [CountriesStore]);
 
+  // Sort countries alphabetically by the displayed label
+  const sortedCountries = useMemo(() => {
+    return [...countries].sort((a, b) =>
+      (a[optionLabel] || '').localeCompare(b[optionLabel] || '')
+    );
+  }, [countries, optionLabel]);
+
   if (loading) {
     return (
-      <Spinner color="secondary" className="d-block"/>
+      <Spinner color="secondary" className="d-block" />
     );
   }
 
@@ -26,8 +34,8 @@ function CountriesSelect(props) {
   }
 
   return (
-    <CustomInput
-      type="select"
+    <Select
+      searchable
       {...formProps}
     >
       <option value="">Select one</option>
@@ -41,7 +49,7 @@ function CountriesSelect(props) {
           </option>
         )
       }
-    </CustomInput>
+    </Select>
   );
 }
 

@@ -3,7 +3,7 @@ import { Countries } from "../helpers/agent";
 
 class CountriesStore {
   loadingCount = 0;
-  countriesRegistry = [];
+  countriesRegistry = undefined;
 
   constructor() {
     makeObservable(this, {
