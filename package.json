@@ -30,6 +30,9 @@
   "eslintConfig": {
     "extends": "react-app"
   },
+  "overrides": {
+    "minimatch": ">=9.0.7"
+  },
   "browserslist": {
     "production": [
       ">0.2%",
