@@ -40,7 +40,7 @@ function ExtraDocumentField(props) {
     return () => {
       pad.removeEventListener('endStroke', handleEndStroke);
     };
-  }, [IcoDocumentStore]);
+  }, [IcoDocumentStore, fieldId, handleExtraDocumentDataChange]);
 
   function handleChangeCheckbox(ev) {
     const value = ev.target.checked;
