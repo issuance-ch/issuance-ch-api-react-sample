@@ -1,5 +1,5 @@
 @import "theme/variables.scss";
-@import "~bootstrap/scss/bootstrap";
+@import "bootstrap/scss/bootstrap";
 
 @mixin crypted-status-variant($status-color) {
   color: theme-color-level($status-color, $alert-color-level);
