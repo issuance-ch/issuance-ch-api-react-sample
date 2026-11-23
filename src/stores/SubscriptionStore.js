@@ -334,6 +334,23 @@ class SubscriptionStore {
     this.modified = {};
   }
 
+  /**
+   * Reload only the proof of liveness group of the fill status, without the loader of the page
+   * nor losing the fields being edited (used while waiting for the verdict of the check).
+   *
+   * @param {string} id Subscription id.
+   * @returns {Promise<void>}
+   */
+  refreshPolStatus(id) {
+    return Subscriptions.getFillStatus(id).then(
+      action((fillStatus) => {
+        if (this.fillStatus && fillStatus?.groups?.pol) {
+          this.fillStatus.groups.pol = fillStatus.groups.pol;
+        }
+      })
+    );
+  }
+
   uploadFile(fileName, fileBase64, fileType, iHaveNoMrz) {
     return Subscriptions.uploadFile(
       this.fillStatus.subscription_id,

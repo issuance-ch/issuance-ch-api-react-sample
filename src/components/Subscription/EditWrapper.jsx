@@ -15,6 +15,7 @@ import Step2ExtraDocument from '../Step/Step2ExtraDocument';
 import Step3Contribution from '../Step/Step3Contribution';
 import Step4Crypto from '../Step/Step4Crypto';
 import Step4Fiat from '../Step/Step4Fiat';
+import Step4SourceOfFunds from '../Step/Step4SourceOfFunds';
 import Step5TokenDeliveryAddress from '../Step/Step5TokenDeliveryAddress';
 import Step6VideoConference from '../Step/Step6VideoConference';
 import GlobalErrors from '../GlobalErrors';
@@ -50,6 +51,7 @@ function SubscriptionEditWrapper(props) {
     Step3Contribution,
     Step4Crypto,
     Step4Fiat,
+    Step4SourceOfFunds,
     ...(identificationAfterPayment ? [] : [Step5TokenDeliveryAddress]),
     Step6VideoConference,
   ];

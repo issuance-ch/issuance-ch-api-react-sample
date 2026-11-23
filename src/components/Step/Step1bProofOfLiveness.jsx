@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { inject, observer } from "mobx-react";
 import { Alert, Button, Spinner } from "reactstrap";
 import CollapsibleCard from "../CollapsibleCard";
 import { toJS } from "mobx";
+import { polErrorMessage } from "../../stores/PolStore";
+
+// Delay between two checks of the status while the proof of liveness is being checked.
+const POL_STATUS_POLL_MS = 10000;
 
 function Step1bProofOfLiveness(props) {
   const groupName = "pol";
   const fieldName = "pol";
-  const { PolStore, SubscriptionStore, fillStatus, identificationAfterPayment, isPaymentConfirmed, ...otherProps } = props;
+  const { PolStore, SubscriptionStore, fillStatus, subscription, identificationAfterPayment, isPaymentConfirmed, ...otherProps } = props;
   const { loadingPol, polError, initPolUrl, polUrl, stopPol } = PolStore;
   const { loading: loadingSubscriptions } = SubscriptionStore;
 
@@ -15,6 +19,37 @@ function Step1bProofOfLiveness(props) {
   const pol = fields[fieldName];
 
   const polStatus = toJS(fields.pol.status);
+
+  // Reason of a rejection known when the page loads (the verdict may arrive after the check window
+  // was closed, e.g. an ID already used by another account).
+  const refuseReasons = toJS(subscription?.checkin_pol_documents?.refuse_reason);
+  const refusedError = polStatus === "REFUSED" && refuseReasons?.length ? polErrorMessage(refuseReasons) : null;
+
+  // While the check is being reviewed, ask its status regularly and show the verdict as soon as it
+  // is known, without reloading the page.
+  useEffect(() => {
+    if (polStatus !== "FILLED") {
+      return undefined;
+    }
+    let stopped = false;
+    const timer = setInterval(() => {
+      PolStore.checkPol(fillStatus.subscription_id)
+        .then((response) => {
+          if (stopped || !response || ["pending", "need-review"].includes(response.pol_status)) {
+            return;
+          }
+          SubscriptionStore.refreshPolStatus(fillStatus.subscription_id);
+        })
+        .catch(() => {
+          // Network error: the next tick tries again.
+        });
+    }, POL_STATUS_POLL_MS);
+
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [polStatus, fillStatus.subscription_id, PolStore, SubscriptionStore]);
 
   const receiveMessage = async (evt) => {
 
@@ -160,14 +195,17 @@ function Step1bProofOfLiveness(props) {
 
         {polStatus === "REFUSED" && (
           <div className="alert alert-danger">
-            {polError || display.msg.refused}
+            {polError || refusedError || display.msg.refused}
           </div>
         )}
         {polStatus === "ACCEPTED" && (
           <div className="alert alert-success">{display.msg.accepted}</div>
         )}
         {polStatus === "FILLED" && (
-          <div className="alert alert-info">{display.msg.filled}</div>
+          <div className="alert alert-info">
+            <Spinner size="sm" color="info" className="mr-2" />
+            {display.msg.filled}
+          </div>
         )}
 
         {polStatus !== "ACCEPTED" && <Button color="primary" onClick={() => startPol()}>
