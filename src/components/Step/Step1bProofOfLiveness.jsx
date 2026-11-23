@@ -150,7 +150,7 @@ function Step1bProofOfLiveness(props) {
                 title="Proof of liveness session"
                 src={polUrl}
                 frameborder="0"
-                allow="camera"
+                allow="camera; microphone"
                 class="full-screen bg-white"
                 allowFullScreen
               ></iframe>
